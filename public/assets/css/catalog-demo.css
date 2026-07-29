@@ -1340,15 +1340,20 @@ button {
 }
 
 .product-grid-3 {
-    grid-template-rows: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 185px);
+    gap: 24px;
+    align-content: center;
 }
 
 .product-grid-2 {
-    grid-template-rows: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 238px);
+    gap: 30px;
+    align-content: center;
 }
 
 .product-grid-1 {
-    grid-template-rows: 1fr;
+    grid-template-rows: 330px;
+    align-content: center;
 }
 
 .product-card {
@@ -1468,66 +1473,67 @@ button {
 }
 
 .product-grid-3 .product-title {
-    padding: 18px 20px;
-    font-size: 23px;
+    padding: 14px 19px;
+    font-size: 21px;
 }
 
 .product-grid-3 .product-specs {
-    font-size: 14px;
+    padding: 11px 18px;
+    font-size: 13px;
 }
 
 .product-grid-3 .product-price {
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .product-grid-2 .product-title {
-    padding: 24px 24px;
-    font-size: 29px;
+    padding: 19px 22px;
+    font-size: 23px;
 }
 
 .product-grid-2 .product-specs {
-    padding: 20px 24px;
-    font-size: 16px;
-    line-height: 1.22;
+    padding: 16px 22px;
+    font-size: 14px;
+    line-height: 1.1;
 }
 
 .product-grid-2 .product-code {
-    font-size: 16px;
+    font-size: 13px;
 }
 
 .product-grid-2 .product-price {
-    font-size: 18px;
+    font-size: 16px;
 }
 
 .product-grid-1 .product-card {
-    grid-template-columns: 55% 45%;
+    grid-template-columns: 58% 42%;
 }
 
 .product-grid-1 .product-copy {
-    grid-template-rows: 38% 62%;
+    grid-template-rows: 40% 60%;
 }
 
 .product-grid-1 .product-data {
-    grid-template-columns: 60% 40%;
+    grid-template-columns: 62% 38%;
 }
 
 .product-grid-1 .product-title {
-    padding: 35px;
-    font-size: 42px;
+    padding: 24px 28px;
+    font-size: 30px;
 }
 
 .product-grid-1 .product-specs {
-    padding: 35px;
-    font-size: 20px;
-    line-height: 1.4;
+    padding: 23px 28px;
+    font-size: 16px;
+    line-height: 1.2;
 }
 
 .product-grid-1 .product-code {
-    font-size: 19px;
+    font-size: 15px;
 }
 
 .product-grid-1 .product-price {
-    font-size: 21px;
+    font-size: 18px;
 }
 
 .back-shade {

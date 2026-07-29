@@ -306,21 +306,21 @@
         },
         grid4: {},
         grid3: {
-            productName: { fontSize: '23px' },
-            productSpecs: { fontSize: '14px' },
-            productPrice: { fontSize: '16px' },
+            productName: { fontSize: '21px' },
+            productSpecs: { fontSize: '13px' },
+            productPrice: { fontSize: '14px' },
         },
         grid2: {
-            productName: { fontSize: '29px' },
-            productSpecs: { fontSize: '16px', lineHeight: 1.22 },
-            productCode: { fontSize: '16px' },
-            productPrice: { fontSize: '18px' },
+            productName: { fontSize: '23px' },
+            productSpecs: { fontSize: '14px', lineHeight: 1.1 },
+            productCode: { fontSize: '13px' },
+            productPrice: { fontSize: '16px' },
         },
         grid1: {
-            productName: { fontSize: '42px' },
-            productSpecs: { fontSize: '20px', lineHeight: 1.4 },
-            productCode: { fontSize: '19px' },
-            productPrice: { fontSize: '21px' },
+            productName: { fontSize: '30px' },
+            productSpecs: { fontSize: '16px', lineHeight: 1.2 },
+            productCode: { fontSize: '15px' },
+            productPrice: { fontSize: '18px' },
         },
         back: {
             wordmark: {

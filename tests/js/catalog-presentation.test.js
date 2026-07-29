@@ -10,7 +10,7 @@ test('resuelve la herencia de estilos por variante', () => {
     assert.equal(presentation.listRoles().length, 21);
     assert.equal(presentation.listTemplates().length, 9);
     assert.equal(presentation.resolveRoleStyle(state, 'grid4', 'productName').fontSize, '20px');
-    assert.equal(presentation.resolveRoleStyle(state, 'grid1', 'productName').fontSize, '42px');
+    assert.equal(presentation.resolveRoleStyle(state, 'grid1', 'productName').fontSize, '30px');
     assert.equal(presentation.resolveRoleStyle(state, 'coverMinimal', 'coverTitle').color, '#702d45');
 });
 
@@ -25,7 +25,17 @@ test('mantiene aislados los ajustes entre variantes', () => {
     assert.equal(presentation.resolveRoleStyle(state, 'grid4', 'productCode').color, '#123456');
     assert.equal(presentation.resolveRoleStyle(state, 'grid4', 'productCode').fontSize, '15px');
     assert.equal(presentation.resolveRoleStyle(state, 'grid2', 'productCode').color, '#702d45');
-    assert.equal(presentation.resolveRoleStyle(state, 'grid2', 'productCode').fontSize, '16px');
+    assert.equal(presentation.resolveRoleStyle(state, 'grid2', 'productCode').fontSize, '13px');
+});
+
+test('mantiene una escala tipográfica natural en las grillas de pocos productos', () => {
+    const state = presentation.createPresentationState();
+
+    assert.equal(presentation.resolveRoleStyle(state, 'grid3', 'productName').fontSize, '21px');
+    assert.equal(presentation.resolveRoleStyle(state, 'grid2', 'productName').fontSize, '23px');
+    assert.equal(presentation.resolveRoleStyle(state, 'grid1', 'productName').fontSize, '30px');
+    assert.equal(presentation.resolveRoleStyle(state, 'grid1', 'productSpecs').fontSize, '16px');
+    assert.equal(presentation.resolveRoleStyle(state, 'grid1', 'productPrice').fontSize, '18px');
 });
 
 test('restablece un rol sin modificar otros roles', () => {
