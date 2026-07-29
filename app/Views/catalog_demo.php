@@ -817,35 +817,45 @@
                     </div>
 
                     <div class="category-manager">
-                        <div class="category-list" aria-label="Categorías disponibles">
-                            <span v-for="category in catalogCategories" :key="category">{{ category }}</span>
+                        <div class="category-quick-assign">
+                            <div class="category-quick-heading">
+                                <strong>Asignar categoría</strong>
+                                <span>
+                                    {{ selectedImportRowCount
+                                        ? selectedImportRowCount + ' producto' + (selectedImportRowCount === 1 ? '' : 's') + ' seleccionado' + (selectedImportRowCount === 1 ? '' : 's')
+                                        : 'Seleccioná productos en la columna Fila' }}
+                                </span>
+                            </div>
+                            <div class="category-list" aria-label="Categorías disponibles">
+                                <button
+                                    v-for="category in catalogCategories"
+                                    :key="category"
+                                    type="button"
+                                    :disabled="selectedImportRowCount === 0"
+                                    @click="assignCategoryToSelection(category)"
+                                >
+                                    {{ category }}
+                                </button>
+                            </div>
                         </div>
                         <form class="category-create" @submit.prevent="addCatalogCategory">
+                            <label for="new-catalog-category">Crear otra categoría</label>
                             <input
+                                id="new-catalog-category"
                                 v-model="newCategoryName"
                                 type="text"
                                 maxlength="60"
-                                placeholder="Nueva categoría"
+                                placeholder="Ej. Regalos empresariales"
                             >
-                            <button type="submit" :disabled="!newCategoryName.trim()">Agregar</button>
+                            <button type="submit" :disabled="!newCategoryName.trim()">
+                                {{ selectedImportRowCount ? 'Crear y asignar' : 'Crear categoría' }}
+                            </button>
+                            <small>
+                                {{ selectedImportRowCount
+                                    ? 'Se asignará inmediatamente a la selección.'
+                                    : 'Después podrás asignarla seleccionando productos.' }}
+                            </small>
                         </form>
-                    </div>
-
-                    <div class="bulk-category-controls">
-                        <strong>{{ selectedImportRowCount }} seleccionadas</strong>
-                        <select v-model="bulkCategory">
-                            <option value="">Elegir categoría…</option>
-                            <option v-for="category in catalogCategories" :key="category" :value="category">
-                                {{ category }}
-                            </option>
-                        </select>
-                        <button
-                            type="button"
-                            :disabled="!bulkCategory || selectedImportRowCount === 0"
-                            @click="applyBulkCategory"
-                        >
-                            Asignar a selección
-                        </button>
                     </div>
                 </section>
 

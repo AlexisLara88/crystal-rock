@@ -37,6 +37,7 @@ Los incrementos operativos de D2 agregan:
 - resolución por fila mediante reemplazo manual, imagen genérica o exclusión reversible del producto;
 - edición de nombre, código y precio durante la sesión;
 - categorías sugeridas, creación de categorías y asignación masiva;
+- asignación rápida al tocar una categoría y creación con asignación inmediata a las filas seleccionadas;
 - validación dinámica de obligatorios y códigos repetidos;
 - confirmación de un modelo normalizado listo para la composición.
 

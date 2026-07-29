@@ -499,11 +499,21 @@
                 const existing = this.catalogCategories.find(category => (
                     category.toLocaleLowerCase('es') === name.toLocaleLowerCase('es')
                 ));
-                if (!existing) this.catalogCategories = [...this.catalogCategories, name];
+                const category = existing || name;
+                if (!existing) this.catalogCategories = [...this.catalogCategories, category];
 
                 this.newCategoryName = '';
-                this.bulkCategory = existing || name;
+                this.bulkCategory = category;
+                if (this.selectedImportRowCount > 0) {
+                    this.applyBulkCategory();
+                    return;
+                }
                 this.invalidateApprovedCatalog();
+            },
+            assignCategoryToSelection(category) {
+                if (!category || this.selectedImportRowCount === 0) return;
+                this.bulkCategory = category;
+                this.applyBulkCategory();
             },
             toggleImportRowSelection(row) {
                 const key = String(row.sourceRow);

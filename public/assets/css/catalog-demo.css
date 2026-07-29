@@ -615,9 +615,39 @@ button {
 
 .category-manager {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(290px, .7fr);
-    gap: 12px;
+    grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr);
+    gap: 16px;
     margin-top: 15px;
+}
+
+.category-quick-assign,
+.category-create {
+    padding: 13px;
+    border: 1px solid var(--ui-border);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .025);
+}
+
+.category-quick-heading {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.category-quick-heading strong,
+.category-create label {
+    color: var(--ui-text);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.category-quick-heading span,
+.category-create small {
+    color: var(--ui-muted);
+    font-size: 10px;
+    line-height: 1.35;
 }
 
 .category-list {
@@ -627,7 +657,7 @@ button {
     align-content: center;
 }
 
-.category-list span {
+.category-list button {
     padding: 7px 10px;
     border: 1px solid rgba(213, 151, 173, .28);
     border-radius: 999px;
@@ -635,6 +665,17 @@ button {
     background: rgba(112, 45, 69, .18);
     font-size: 11px;
     font-weight: 750;
+    cursor: pointer;
+}
+
+.category-list button:hover:not(:disabled) {
+    border-color: #edb7ca;
+    background: rgba(112, 45, 69, .38);
+}
+
+.category-list button:disabled {
+    cursor: not-allowed;
+    opacity: .48;
 }
 
 .category-create,
@@ -645,6 +686,12 @@ button {
 
 .category-create {
     grid-template-columns: minmax(0, 1fr) auto;
+    align-content: start;
+}
+
+.category-create label,
+.category-create small {
+    grid-column: 1 / -1;
 }
 
 .category-create input,
@@ -794,11 +841,13 @@ button {
 }
 
 .import-table td:nth-child(8) {
-    min-width: 118px;
+    min-width: 165px;
+    padding-right: 24px;
 }
 
 .import-table td:nth-child(9) {
-    min-width: 152px;
+    min-width: 174px;
+    padding-left: 24px;
 }
 
 .import-table th:last-child,
@@ -815,6 +864,7 @@ button {
     z-index: 2;
     background: #f3eee7;
     text-align: center;
+    padding-left: 24px;
 }
 
 .import-table td small {
@@ -944,6 +994,13 @@ button {
 }
 
 .image-reference {
+    display: inline-flex;
+    padding: 6px 8px;
+    border: 1px solid rgba(169, 188, 168, .24);
+    border-radius: 7px;
+    color: var(--ui-text);
+    background: rgba(169, 188, 168, .09);
+    font-size: 11px;
     white-space: nowrap;
 }
 
