@@ -13,6 +13,7 @@ La fase visual D1 incluye una muestra navegable con datos fijos:
 - previsualización A4 individual o de catálogo completo.
 - editor contextual de imágenes;
 - modelo de presentación separado por tema, plantilla y rol visual.
+- selección contextual de todos los roles de texto.
 
 La importación de Excel, validaciones y generación PDF pertenecen a las siguientes fases.
 

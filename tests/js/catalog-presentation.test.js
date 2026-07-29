@@ -7,7 +7,7 @@ const presentation = require('../../public/assets/js/catalog-presentation.js');
 test('resuelve la herencia de estilos por variante', () => {
     const state = presentation.createPresentationState();
 
-    assert.equal(presentation.listRoles().length, 20);
+    assert.equal(presentation.listRoles().length, 21);
     assert.equal(presentation.listTemplates().length, 9);
     assert.equal(presentation.resolveRoleStyle(state, 'grid4', 'productName').fontSize, '20px');
     assert.equal(presentation.resolveRoleStyle(state, 'grid1', 'productName').fontSize, '42px');

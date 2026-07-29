@@ -95,17 +95,48 @@
                             <img class="sheet-background" :src="asset('cover-wine.png')" alt="">
                             <div class="cover-shade"></div>
                             <div class="cover-promo">
-                                <small v-if="coverVariant === 'promotional'">¡Nuevo!</small>
-                                <span :style="textStyle(coverTemplateId(), 'promotionText')">Hacé tu compra por<br>la <b>web</b> y obtené un</span>
-                                <strong :style="textStyle(coverTemplateId(), 'promotionValue')">10% OFF</strong>
+                                <small
+                                    v-if="coverVariant === 'promotional'"
+                                    :class="textSelectionClass(coverTemplateId(), 'promotionBadge')"
+                                    :style="textStyle(coverTemplateId(), 'promotionBadge')"
+                                    @pointerdown="selectText(coverTemplateId(), 'promotionBadge', $event)"
+                                >¡Nuevo!</small>
+                                <span
+                                    :class="textSelectionClass(coverTemplateId(), 'promotionText')"
+                                    :style="textStyle(coverTemplateId(), 'promotionText')"
+                                    @pointerdown="selectText(coverTemplateId(), 'promotionText', $event)"
+                                >Hacé tu compra por<br>la <b>web</b> y obtené un</span>
+                                <strong
+                                    :class="textSelectionClass(coverTemplateId(), 'promotionValue')"
+                                    :style="textStyle(coverTemplateId(), 'promotionValue')"
+                                    @pointerdown="selectText(coverTemplateId(), 'promotionValue', $event)"
+                                >10% OFF</strong>
                             </div>
-                            <div class="date-pill" :style="textStyle(coverTemplateId(), 'date')">ACTUALIZADO: 28/07/26</div>
+                            <div
+                                class="date-pill"
+                                :class="textSelectionClass(coverTemplateId(), 'date')"
+                                :style="textStyle(coverTemplateId(), 'date')"
+                                @pointerdown="selectText(coverTemplateId(), 'date', $event)"
+                            >ACTUALIZADO: 28/07/26</div>
                             <div class="cover-line line-one"></div>
                             <div class="cover-line line-two"></div>
                             <div class="cover-title">
-                                <span class="catalog-wordmark" :style="textStyle(coverTemplateId(), 'wordmark')">CRYSTALROCK</span>
-                                <h2 :style="textStyle(coverTemplateId(), 'coverTitle')">Cristalería</h2>
-                                <p :style="textStyle(coverTemplateId(), 'coverSubtitle')">Calidad real para casas reales</p>
+                                <span
+                                    class="catalog-wordmark"
+                                    :class="textSelectionClass(coverTemplateId(), 'wordmark')"
+                                    :style="textStyle(coverTemplateId(), 'wordmark')"
+                                    @pointerdown="selectText(coverTemplateId(), 'wordmark', $event)"
+                                >CRYSTALROCK</span>
+                                <h2
+                                    :class="textSelectionClass(coverTemplateId(), 'coverTitle')"
+                                    :style="textStyle(coverTemplateId(), 'coverTitle')"
+                                    @pointerdown="selectText(coverTemplateId(), 'coverTitle', $event)"
+                                >Cristalería</h2>
+                                <p
+                                    :class="textSelectionClass(coverTemplateId(), 'coverSubtitle')"
+                                    :style="textStyle(coverTemplateId(), 'coverSubtitle')"
+                                    @pointerdown="selectText(coverTemplateId(), 'coverSubtitle', $event)"
+                                >Calidad real para casas reales</p>
                             </div>
                         </template>
 
@@ -113,11 +144,26 @@
                             <div class="featured-shell">
                                 <div class="featured-hero">
                                     <img :src="asset('feature-wine.jpg')" alt="">
-                                    <div class="category-ribbon" :style="textStyle('featured', 'category')">CRISTALERÍA</div>
-                                    <div class="featured-label" :style="textStyle('featured', 'featuredLabel')">Producto<br>destacado</div>
+                                    <div
+                                        class="category-ribbon"
+                                        :class="textSelectionClass('featured', 'category')"
+                                        :style="textStyle('featured', 'category')"
+                                        @pointerdown="selectText('featured', 'category', $event)"
+                                    >CRISTALERÍA</div>
+                                    <div
+                                        class="featured-label"
+                                        :class="textSelectionClass('featured', 'featuredLabel')"
+                                        :style="textStyle('featured', 'featuredLabel')"
+                                        @pointerdown="selectText('featured', 'featuredLabel', $event)"
+                                    >Producto<br>destacado</div>
                                 </div>
                                 <div class="featured-product">
-                                    <div class="featured-name" :style="textStyle('featured', 'productName')">Copas Gin<br>Tonic 590 ML</div>
+                                    <div
+                                        class="featured-name"
+                                        :class="textSelectionClass('featured', 'productName')"
+                                        :style="textStyle('featured', 'productName')"
+                                        @pointerdown="selectText('featured', 'productName', $event)"
+                                    >Copas Gin<br>Tonic 590 ML</div>
                                     <div class="featured-cutout-slot">
                                         <div
                                             :class="['featured-cutout', 'image-mask', { active: activeImageKey === 'featured-' + featuredProduct.code }]"
@@ -135,22 +181,46 @@
                                             >
                                         </div>
                                     </div>
-                                    <dl class="product-specs featured-specs" :style="textStyle('featured', 'productSpecs')">
+                                    <dl
+                                        class="product-specs featured-specs"
+                                        :class="textSelectionClass('featured', 'productSpecs')"
+                                        :style="textStyle('featured', 'productSpecs')"
+                                        @pointerdown="selectText('featured', 'productSpecs', $event)"
+                                    >
                                         <template v-for="spec in featuredProduct.specs" :key="spec[0]">
                                             <dt>{{ spec[0] }}</dt>
                                             <dd>{{ spec[1] }}</dd>
                                         </template>
                                     </dl>
                                     <div class="featured-commerce">
-                                        <div class="featured-code" :style="textStyle('featured', 'productCode')"><b>Cod.</b> {{ featuredProduct.code }}</div>
-                                        <div class="featured-price" :style="textStyle('featured', 'productPrice')">Ud. {{ featuredProduct.price }}</div>
+                                        <div
+                                            class="featured-code"
+                                            :class="textSelectionClass('featured', 'productCode')"
+                                            :style="textStyle('featured', 'productCode')"
+                                            @pointerdown="selectText('featured', 'productCode', $event)"
+                                        ><b>Cod.</b> {{ featuredProduct.code }}</div>
+                                        <div
+                                            class="featured-price"
+                                            :class="textSelectionClass('featured', 'productPrice')"
+                                            :style="textStyle('featured', 'productPrice')"
+                                            @pointerdown="selectText('featured', 'productPrice', $event)"
+                                        >Ud. {{ featuredProduct.price }}</div>
                                     </div>
                                 </div>
                             </div>
                             <footer class="sheet-footer light-footer">
-                                <span class="catalog-wordmark footer-wordmark" :style="textStyle('featured', 'footerWordmark')">CRYSTALROCK</span>
+                                <span
+                                    class="catalog-wordmark footer-wordmark"
+                                    :class="textSelectionClass('featured', 'footerWordmark')"
+                                    :style="textStyle('featured', 'footerWordmark')"
+                                    @pointerdown="selectText('featured', 'footerWordmark', $event)"
+                                >CRYSTALROCK</span>
                                 <i></i>
-                                <span :style="textStyle('featured', 'footerTagline')">PARA CASAS REALES</span>
+                                <span
+                                    :class="textSelectionClass('featured', 'footerTagline')"
+                                    :style="textStyle('featured', 'footerTagline')"
+                                    @pointerdown="selectText('featured', 'footerTagline', $event)"
+                                >PARA CASAS REALES</span>
                             </footer>
                         </template>
 
@@ -162,17 +232,37 @@
                                     class="product-card"
                                 >
                                     <div class="product-copy">
-                                        <div class="product-title" :style="textStyle(gridTemplateId(page.count), 'productName')">{{ product.name }}</div>
+                                        <div
+                                            class="product-title"
+                                            :class="textSelectionClass(gridTemplateId(page.count), 'productName')"
+                                            :style="textStyle(gridTemplateId(page.count), 'productName')"
+                                            @pointerdown="selectText(gridTemplateId(page.count), 'productName', $event)"
+                                        >{{ product.name }}</div>
                                         <div class="product-data">
-                                            <dl class="product-specs" :style="textStyle(gridTemplateId(page.count), 'productSpecs')">
+                                            <dl
+                                                class="product-specs"
+                                                :class="textSelectionClass(gridTemplateId(page.count), 'productSpecs')"
+                                                :style="textStyle(gridTemplateId(page.count), 'productSpecs')"
+                                                @pointerdown="selectText(gridTemplateId(page.count), 'productSpecs', $event)"
+                                            >
                                                 <template v-for="spec in product.specs" :key="spec[0]">
                                                     <dt>{{ spec[0] }}</dt>
                                                     <dd>{{ spec[1] }}</dd>
                                                 </template>
                                             </dl>
                                             <div class="product-commerce">
-                                                <div class="product-code" :style="textStyle(gridTemplateId(page.count), 'productCode')"><b>Cod.</b> {{ product.code }}</div>
-                                                <div class="product-price" :style="textStyle(gridTemplateId(page.count), 'productPrice')">Ud. {{ product.price }}</div>
+                                                <div
+                                                    class="product-code"
+                                                    :class="textSelectionClass(gridTemplateId(page.count), 'productCode')"
+                                                    :style="textStyle(gridTemplateId(page.count), 'productCode')"
+                                                    @pointerdown="selectText(gridTemplateId(page.count), 'productCode', $event)"
+                                                ><b>Cod.</b> {{ product.code }}</div>
+                                                <div
+                                                    class="product-price"
+                                                    :class="textSelectionClass(gridTemplateId(page.count), 'productPrice')"
+                                                    :style="textStyle(gridTemplateId(page.count), 'productPrice')"
+                                                    @pointerdown="selectText(gridTemplateId(page.count), 'productPrice', $event)"
+                                                >Ud. {{ product.price }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -196,9 +286,18 @@
                                 </section>
                             </div>
                             <footer class="sheet-footer light-footer grid-footer">
-                                <span class="catalog-wordmark footer-wordmark" :style="textStyle(gridTemplateId(page.count), 'footerWordmark')">CRYSTALROCK</span>
+                                <span
+                                    class="catalog-wordmark footer-wordmark"
+                                    :class="textSelectionClass(gridTemplateId(page.count), 'footerWordmark')"
+                                    :style="textStyle(gridTemplateId(page.count), 'footerWordmark')"
+                                    @pointerdown="selectText(gridTemplateId(page.count), 'footerWordmark', $event)"
+                                >CRYSTALROCK</span>
                                 <i></i>
-                                <span :style="textStyle(gridTemplateId(page.count), 'footerTagline')">PARA CASAS REALES</span>
+                                <span
+                                    :class="textSelectionClass(gridTemplateId(page.count), 'footerTagline')"
+                                    :style="textStyle(gridTemplateId(page.count), 'footerTagline')"
+                                    @pointerdown="selectText(gridTemplateId(page.count), 'footerTagline', $event)"
+                                >PARA CASAS REALES</span>
                             </footer>
                         </template>
 
@@ -206,19 +305,62 @@
                             <img class="sheet-background" :src="asset('back-community.png')" alt="">
                             <div class="back-shade"></div>
                             <div class="back-content">
-                                <span class="catalog-wordmark back-wordmark" :style="textStyle('back', 'wordmark')">CRYSTALROCK</span>
+                                <span
+                                    class="catalog-wordmark back-wordmark"
+                                    :class="textSelectionClass('back', 'wordmark')"
+                                    :style="textStyle('back', 'wordmark')"
+                                    @pointerdown="selectText('back', 'wordmark', $event)"
+                                >CRYSTALROCK</span>
                                 <div class="order-card">
-                                    <h2 :style="textStyle('back', 'backHeading')">¿Cómo hacer tu pedido?</h2>
+                                    <h2
+                                        :class="textSelectionClass('back', 'backHeading')"
+                                        :style="textStyle('back', 'backHeading')"
+                                        @pointerdown="selectText('back', 'backHeading', $event)"
+                                    >¿Cómo hacer tu pedido?</h2>
                                     <hr>
-                                    <strong :style="textStyle('back', 'backChannel')">Por nuestra web</strong>
-                                    <a href="https://www.crystalrock.com.ar" :style="textStyle('back', 'backLink')">www.crystalrock.com.ar <span>↗</span></a>
-                                    <p :style="textStyle('back', 'backNote')">¡Obtenés un 10% OFF!</p>
-                                    <strong :style="textStyle('back', 'backChannel')">Por WhatsApp</strong>
-                                    <a href="#" :style="textStyle('back', 'backLink')">Atención personalizada <span>↗</span></a>
+                                    <strong
+                                        :class="textSelectionClass('back', 'backChannel')"
+                                        :style="textStyle('back', 'backChannel')"
+                                        @pointerdown="selectText('back', 'backChannel', $event)"
+                                    >Por nuestra web</strong>
+                                    <a
+                                        href="https://www.crystalrock.com.ar"
+                                        :class="textSelectionClass('back', 'backLink')"
+                                        :style="textStyle('back', 'backLink')"
+                                        @pointerdown="selectText('back', 'backLink', $event)"
+                                        @click.prevent
+                                    >www.crystalrock.com.ar <span>↗</span></a>
+                                    <p
+                                        :class="textSelectionClass('back', 'backNote')"
+                                        :style="textStyle('back', 'backNote')"
+                                        @pointerdown="selectText('back', 'backNote', $event)"
+                                    >¡Obtenés un 10% OFF!</p>
+                                    <strong
+                                        :class="textSelectionClass('back', 'backChannel')"
+                                        :style="textStyle('back', 'backChannel')"
+                                        @pointerdown="selectText('back', 'backChannel', $event)"
+                                    >Por WhatsApp</strong>
+                                    <a
+                                        href="#"
+                                        :class="textSelectionClass('back', 'backLink')"
+                                        :style="textStyle('back', 'backLink')"
+                                        @pointerdown="selectText('back', 'backLink', $event)"
+                                        @click.prevent
+                                    >Atención personalizada <span>↗</span></a>
                                 </div>
                                 <div class="community-cta">
-                                    <h3 :style="textStyle('back', 'communityHeading')">¡Sumate a nuestra<br>comunidad en las redes!</h3>
-                                    <a href="#" :style="textStyle('back', 'communityLink')">Instagram</a>
+                                    <h3
+                                        :class="textSelectionClass('back', 'communityHeading')"
+                                        :style="textStyle('back', 'communityHeading')"
+                                        @pointerdown="selectText('back', 'communityHeading', $event)"
+                                    >¡Sumate a nuestra<br>comunidad en las redes!</h3>
+                                    <a
+                                        href="#"
+                                        :class="textSelectionClass('back', 'communityLink')"
+                                        :style="textStyle('back', 'communityLink')"
+                                        @pointerdown="selectText('back', 'communityLink', $event)"
+                                        @click.prevent
+                                    >Instagram</a>
                                 </div>
                             </div>
                         </template>
@@ -231,7 +373,7 @@
 
     <aside
         v-if="activeImageAdjustment"
-        class="image-editor floating-image-editor"
+        class="image-editor floating-image-editor floating-element-editor"
         :style="floatingEditorStyle"
         aria-live="polite"
         @pointerdown.stop
@@ -282,6 +424,32 @@
             <button type="button" @click="rotateImage(15)" aria-label="Girar 15 grados a la derecha">↷</button>
         </div>
         <small>Los controles y la selección no aparecen en el PDF.</small>
+    </aside>
+
+    <aside
+        v-if="activeTextInspector"
+        class="image-editor floating-image-editor floating-element-editor text-element-editor"
+        :style="floatingEditorStyle"
+        aria-live="polite"
+        @pointerdown.stop
+        @click.stop
+    >
+        <button type="button" class="close-image-editor" @click="deselectText" aria-label="Cerrar selección de texto">×</button>
+        <span class="image-editor-kicker">Elemento de texto</span>
+        <strong>{{ activeTextInspector.label }}</strong>
+        <p>La selección está lista. Los controles de estilo se incorporan en EV3.</p>
+
+        <dl class="text-selection-meta">
+            <dt>Plantilla</dt>
+            <dd>{{ activeTextInspector.templateLabel }}</dd>
+            <dt>Alcance</dt>
+            <dd>Todas las instancias de este rol</dd>
+        </dl>
+
+        <button type="button" class="text-reset-button" @click="resetSelectedText">
+            Restablecer elemento
+        </button>
+        <small>La selección y este panel no aparecen en el PDF.</small>
     </aside>
 </div>
 

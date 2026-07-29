@@ -10,6 +10,7 @@
                 showAll: false,
                 coverVariant: 'editorial',
                 activeImageKey: null,
+                activeTextSelection: null,
                 imageAdjustments: {},
                 dragState: null,
                 floatingEditorPosition: {
@@ -77,6 +78,16 @@
 
                 return this.imageAdjustments[this.activeImageKey] ?? null;
             },
+            activeTextInspector() {
+                if (!this.activeTextSelection) return null;
+
+                const definition = presentationEngine.getRoleDefinition(this.activeTextSelection.role);
+
+                return {
+                    ...this.activeTextSelection,
+                    label: definition.label,
+                };
+            },
             floatingEditorStyle() {
                 return {
                     top: `${this.floatingEditorPosition.top}px`,
@@ -108,6 +119,43 @@
             },
             gridTemplateId(count) {
                 return `grid${count}`;
+            },
+            templateLabel(templateId) {
+                const labels = {
+                    coverEditorial: 'Portada · Editorial',
+                    coverPromotional: 'Portada · Campaña',
+                    coverMinimal: 'Portada · Minimal claro',
+                    featured: 'Producto destacado',
+                    grid4: 'Grilla · 4 productos',
+                    grid3: 'Grilla · 3 productos',
+                    grid2: 'Grilla · 2 productos',
+                    grid1: 'Grilla · 1 producto',
+                    back: 'Contraportada',
+                };
+
+                return labels[templateId] ?? templateId;
+            },
+            isTextSelected(templateId, role) {
+                return this.activeTextSelection?.templateId === templateId
+                    && this.activeTextSelection?.role === role;
+            },
+            textSelectionClass(templateId, role) {
+                return {
+                    'editable-text': true,
+                    'active-text': this.isTextSelected(templateId, role),
+                };
+            },
+            selectText(templateId, role, event) {
+                if (event.button !== 0) return;
+
+                this.activeImageKey = null;
+                this.dragState = null;
+                this.activeTextSelection = {
+                    templateId,
+                    templateLabel: this.templateLabel(templateId),
+                    role,
+                };
+                this.positionFloatingEditor(event.currentTarget, 225);
             },
             selectPage(index) {
                 this.currentPage = index;
@@ -155,6 +203,7 @@
                 const adjustment = this.ensureImageAdjustment(key, label);
                 const bounds = event.currentTarget.getBoundingClientRect();
 
+                this.activeTextSelection = null;
                 this.activeImageKey = key;
                 this.positionFloatingEditor(event.currentTarget);
                 this.dragState = {
@@ -221,10 +270,9 @@
                 this.activeImageAdjustment.maskSize = 0.9;
                 this.activeImageAdjustment.rotation = 0;
             },
-            positionFloatingEditor(element) {
+            positionFloatingEditor(element, panelHeight = 310) {
                 const bounds = element.getBoundingClientRect();
                 const panelWidth = 270;
-                const panelHeight = 310;
                 const gap = 14;
                 const viewportPadding = 12;
                 let left = bounds.right + gap;
@@ -239,14 +287,33 @@
                 };
             },
             handleDocumentPointerDown(event) {
-                if (!this.activeImageKey) return;
-                if (event.target instanceof Element && event.target.closest('.image-mask, .floating-image-editor')) return;
+                if (!this.activeImageKey && !this.activeTextSelection) return;
+                if (
+                    event.target instanceof Element
+                    && event.target.closest('.image-mask, .editable-text, .floating-element-editor')
+                ) return;
 
-                this.deselectImage();
+                this.deselectAll();
             },
             deselectImage() {
                 this.activeImageKey = null;
                 this.dragState = null;
+            },
+            deselectText() {
+                this.activeTextSelection = null;
+            },
+            deselectAll() {
+                this.deselectImage();
+                this.deselectText();
+            },
+            resetSelectedText() {
+                if (!this.activeTextSelection) return;
+
+                presentationEngine.resetRoleStyle(
+                    this.presentationState,
+                    this.activeTextSelection.templateId,
+                    this.activeTextSelection.role,
+                );
             },
             clamp(value, minimum, maximum) {
                 return Math.min(Math.max(value, minimum), maximum);

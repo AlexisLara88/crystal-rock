@@ -48,6 +48,7 @@
         coverSubtitle: { label: 'Bajada de portada', properties: EDITABLE_PROPERTIES },
         promotionText: { label: 'Texto promocional', properties: EDITABLE_PROPERTIES },
         promotionValue: { label: 'Valor promocional', properties: EDITABLE_PROPERTIES },
+        promotionBadge: { label: 'Etiqueta promocional', properties: EDITABLE_PROPERTIES },
         date: { label: 'Fecha', properties: EDITABLE_PROPERTIES },
         category: { label: 'Categoría', properties: EDITABLE_PROPERTIES },
         featuredLabel: { label: 'Etiqueta destacada', properties: EDITABLE_PROPERTIES },
@@ -110,6 +111,15 @@
             color: 'color:cream',
             backgroundColor: 'color:transparent',
             textAlign: 'left',
+        },
+        promotionBadge: {
+            fontFamily: 'font:sansEditorial',
+            fontSize: '14px',
+            fontWeight: 800,
+            lineHeight: 1,
+            color: 'color:wine',
+            backgroundColor: 'color:cream',
+            textAlign: 'center',
         },
         date: {
             fontFamily: 'font:sansEditorial',

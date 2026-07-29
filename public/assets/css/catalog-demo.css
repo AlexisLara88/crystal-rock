@@ -283,6 +283,63 @@ button {
     box-shadow: 0 20px 55px rgba(41, 51, 47, .24);
 }
 
+.editable-text {
+    cursor: pointer;
+}
+
+.editable-text:hover {
+    outline: 1px dashed rgba(201, 121, 91, .72);
+    outline-offset: 2px;
+}
+
+.editable-text.active-text {
+    outline: 2px solid var(--terracotta);
+    outline-offset: 3px;
+}
+
+.text-element-editor {
+    min-height: 0;
+}
+
+.text-selection-meta {
+    display: grid;
+    grid-template-columns: 58px 1fr;
+    gap: 7px 10px;
+    margin: 0 0 14px;
+    padding: 12px;
+    border-radius: 11px;
+    background: #eef1ea;
+    font-size: 10px;
+    line-height: 1.3;
+}
+
+.text-selection-meta dt {
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.text-selection-meta dd {
+    margin: 0;
+    color: var(--ink);
+    font-weight: 800;
+}
+
+.text-reset-button {
+    width: 100%;
+    min-height: 34px;
+    border: 1px solid rgba(88, 106, 91, .28);
+    border-radius: 10px;
+    color: var(--sage-dark);
+    background: #fff;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.text-reset-button:hover {
+    border-color: var(--sage-dark);
+    background: #eef1ea;
+}
+
 .close-image-editor {
     position: absolute;
     top: 9px;
