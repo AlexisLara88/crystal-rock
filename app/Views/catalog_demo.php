@@ -380,8 +380,17 @@
         @click.stop
     >
         <button type="button" class="close-image-editor" @click="deselectImage" aria-label="Cerrar ajuste de imagen">×</button>
-        <span class="image-editor-kicker">Ajuste de imagen</span>
-        <strong>{{ activeImageAdjustment.label }}</strong>
+        <div
+            class="floating-editor-handle"
+            title="Arrastrar panel"
+            @pointerdown="startFloatingEditorDrag"
+        >
+            <span class="floating-editor-grip" aria-hidden="true">⠿</span>
+            <div>
+                <span class="image-editor-kicker">Ajuste de imagen</span>
+                <strong>{{ activeImageAdjustment.label }}</strong>
+            </div>
+        </div>
         <p>Arrastrá la imagen dentro de la máscara o usá los controles.</p>
 
         <label class="zoom-control">
@@ -435,8 +444,17 @@
         @click.stop
     >
         <button type="button" class="close-image-editor" @click="deselectText" aria-label="Cerrar selección de texto">×</button>
-        <span class="image-editor-kicker">Elemento de texto</span>
-        <strong>{{ activeTextInspector.label }}</strong>
+        <div
+            class="floating-editor-handle"
+            title="Arrastrar panel"
+            @pointerdown="startFloatingEditorDrag"
+        >
+            <span class="floating-editor-grip" aria-hidden="true">⠿</span>
+            <div>
+                <span class="image-editor-kicker">Elemento de texto</span>
+                <strong>{{ activeTextInspector.label }}</strong>
+            </div>
+        </div>
 
         <dl class="text-selection-meta">
             <dt>Plantilla</dt>

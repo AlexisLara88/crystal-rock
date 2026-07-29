@@ -277,10 +277,40 @@ button {
 .floating-image-editor {
     position: fixed;
     z-index: 100;
-    width: 270px;
+    width: min(270px, calc(100vw - 24px));
     margin: 0;
     padding-top: 22px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     box-shadow: 0 20px 55px rgba(41, 51, 47, .24);
+}
+
+.floating-editor-handle {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: 7px;
+    align-items: start;
+    min-height: 43px;
+    padding-right: 28px;
+    margin: -5px 0 10px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.floating-editor-handle:active {
+    cursor: grabbing;
+}
+
+.floating-editor-grip {
+    color: var(--terracotta);
+    font-size: 18px;
+    line-height: 1;
+    transform: translateY(2px);
+}
+
+.floating-editor-handle .image-editor-kicker {
+    margin-bottom: 5px;
 }
 
 .editable-text {
@@ -301,7 +331,7 @@ button {
 }
 
 .text-element-editor {
-    width: 300px;
+    width: min(300px, calc(100vw - 24px));
     min-height: 0;
     max-height: calc(100vh - 24px);
     overflow-y: auto;
@@ -599,6 +629,7 @@ button {
     background: #eef1ea;
     font-size: 17px;
     line-height: 1;
+    z-index: 2;
 }
 
 .close-image-editor:hover {

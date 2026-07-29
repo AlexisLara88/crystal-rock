@@ -16,9 +16,10 @@
                 layoutWarning: '',
                 imageAdjustments: {},
                 dragState: null,
+                panelDragState: null,
                 floatingEditorPosition: {
-                    top: 170,
-                    left: 350,
+                    top: 96,
+                    left: 12,
                 },
                 pages: [
                     { id: 'cover', type: 'cover', label: 'Portada', description: 'Tres tratamientos disponibles' },
@@ -156,14 +157,23 @@
         mounted() {
             document.addEventListener('pointerdown', this.handleDocumentPointerDown);
             document.addEventListener('pointermove', this.dragText);
+            document.addEventListener('pointermove', this.dragFloatingEditor);
             document.addEventListener('pointerup', this.endTextDrag);
+            document.addEventListener('pointerup', this.endFloatingEditorDrag);
             document.addEventListener('pointercancel', this.endTextDrag);
+            document.addEventListener('pointercancel', this.endFloatingEditorDrag);
+            window.addEventListener('resize', this.constrainFloatingEditor);
+            this.dockFloatingEditor();
         },
         beforeUnmount() {
             document.removeEventListener('pointerdown', this.handleDocumentPointerDown);
             document.removeEventListener('pointermove', this.dragText);
+            document.removeEventListener('pointermove', this.dragFloatingEditor);
             document.removeEventListener('pointerup', this.endTextDrag);
+            document.removeEventListener('pointerup', this.endFloatingEditorDrag);
             document.removeEventListener('pointercancel', this.endTextDrag);
+            document.removeEventListener('pointercancel', this.endFloatingEditorDrag);
+            window.removeEventListener('resize', this.constrainFloatingEditor);
         },
         watch: {
             coverVariant() {
@@ -252,7 +262,7 @@
                 };
                 this.selectedTextElement = event.currentTarget;
                 this.ensureSelectedTextDimensions(event.currentTarget);
-                this.positionFloatingEditor(event.currentTarget, 560, 300);
+                this.prepareFloatingEditor();
                 this.startTextDrag(event);
             },
             selectPage(index) {
@@ -314,7 +324,7 @@
 
                 this.activeTextSelection = null;
                 this.activeImageKey = key;
-                this.positionFloatingEditor(event.currentTarget);
+                this.prepareFloatingEditor();
                 this.dragState = {
                     key,
                     pointerId: event.pointerId,
@@ -379,19 +389,84 @@
                 this.activeImageAdjustment.maskSize = 0.9;
                 this.activeImageAdjustment.rotation = 0;
             },
-            positionFloatingEditor(element, panelHeight = 310, panelWidth = 270) {
-                const bounds = element.getBoundingClientRect();
-                const gap = 14;
+            dockFloatingEditor() {
                 const viewportPadding = 12;
-                let left = bounds.right + gap;
-
-                if (left + panelWidth > window.innerWidth - viewportPadding) {
-                    left = bounds.left - panelWidth - gap;
-                }
+                const panelWidth = 300;
 
                 this.floatingEditorPosition = {
-                    top: this.clamp(bounds.top, viewportPadding, window.innerHeight - panelHeight - viewportPadding),
-                    left: this.clamp(left, viewportPadding, window.innerWidth - panelWidth - viewportPadding),
+                    top: 96,
+                    left: Math.max(viewportPadding, window.innerWidth - panelWidth - 24),
+                };
+            },
+            prepareFloatingEditor() {
+                this.$nextTick(() => this.constrainFloatingEditor());
+            },
+            startFloatingEditorDrag(event) {
+                if (event.button !== 0) return;
+
+                event.preventDefault();
+                const panel = event.currentTarget.closest('.floating-element-editor');
+
+                if (!panel) return;
+
+                this.panelDragState = {
+                    pointerId: event.pointerId,
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    originLeft: this.floatingEditorPosition.left,
+                    originTop: this.floatingEditorPosition.top,
+                    panelWidth: panel.offsetWidth,
+                };
+
+                event.currentTarget.setPointerCapture?.(event.pointerId);
+            },
+            dragFloatingEditor(event) {
+                if (!this.panelDragState || this.panelDragState.pointerId !== event.pointerId) return;
+
+                event.preventDefault();
+                const viewportPadding = 12;
+                const minimumVisibleHeight = 180;
+                const maxLeft = Math.max(
+                    viewportPadding,
+                    window.innerWidth - this.panelDragState.panelWidth - viewportPadding,
+                );
+                const maxTop = Math.max(viewportPadding, window.innerHeight - minimumVisibleHeight);
+
+                this.floatingEditorPosition = {
+                    left: this.clamp(
+                        this.panelDragState.originLeft + event.clientX - this.panelDragState.startX,
+                        viewportPadding,
+                        maxLeft,
+                    ),
+                    top: this.clamp(
+                        this.panelDragState.originTop + event.clientY - this.panelDragState.startY,
+                        viewportPadding,
+                        maxTop,
+                    ),
+                };
+            },
+            endFloatingEditorDrag(event) {
+                if (!this.panelDragState || this.panelDragState.pointerId !== event.pointerId) return;
+
+                this.panelDragState = null;
+            },
+            constrainFloatingEditor() {
+                const panel = document.querySelector('.floating-element-editor');
+                const panelWidth = panel?.offsetWidth ?? 300;
+                const viewportPadding = 12;
+                const minimumVisibleHeight = 180;
+
+                this.floatingEditorPosition = {
+                    left: this.clamp(
+                        this.floatingEditorPosition.left,
+                        viewportPadding,
+                        Math.max(viewportPadding, window.innerWidth - panelWidth - viewportPadding),
+                    ),
+                    top: this.clamp(
+                        this.floatingEditorPosition.top,
+                        viewportPadding,
+                        Math.max(viewportPadding, window.innerHeight - minimumVisibleHeight),
+                    ),
                 };
             },
             handleDocumentPointerDown(event) {
