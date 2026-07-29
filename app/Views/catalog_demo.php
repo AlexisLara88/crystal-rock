@@ -46,17 +46,6 @@
                 <p>La estructura decide cómo acomodar el contenido; el usuario solo elige y corrige datos.</p>
             </div>
 
-            <div class="workflow-context">
-                <span>Flujo del producto</span>
-                <ol>
-                    <li>Excel + imágenes</li>
-                    <li>Validar y ordenar</li>
-                    <li class="active">Editar plantillas</li>
-                    <li>Generar PDF</li>
-                </ol>
-                <p>Esta demo corresponde al paso 3. La conexión de datos se incorpora en D2.</p>
-            </div>
-
             <nav class="page-nav" aria-label="Plantillas del catálogo">
                 <button
                     v-for="(page, index) in pages"
