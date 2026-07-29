@@ -77,6 +77,12 @@ Rutas disponibles:
 
 Las rutas `importar` e `imagenes` reciben solicitudes `POST` con protección CSRF. La segunda procesa los archivos solo para la revisión actual y no los conserva como biblioteca persistente.
 
+### Paquete de prueba de imágenes
+
+`public/downloads/crystal-rock-imagenes-prueba.zip` contiene ocho imágenes sintéticas en formato JPG, nombradas `1.jpg` a `8.jpg` para coincidir directamente con la columna `@Image` de `Final_Secundario.xlsx`.
+
+El paquete permite probar el ciclo de carga, asociación, revisión y confirmación sin reutilizar las imágenes visibles en las plantillas. Es material temporal de demostración y no un activo comercial oficial de Crystal Rock.
+
 ## Verificaciones
 
 ```bash
