@@ -7,6 +7,9 @@
                 currentPage: 0,
                 showAll: false,
                 coverVariant: 'editorial',
+                activeImageKey: null,
+                imageAdjustments: {},
+                dragState: null,
                 pages: [
                     { id: 'cover', type: 'cover', label: 'Portada', description: 'Tres tratamientos disponibles' },
                     { id: 'featured', type: 'featured', label: 'Producto destacado', description: 'Apertura de categoría' },
@@ -63,6 +66,11 @@
             visiblePages() {
                 return this.showAll ? this.pages : [this.pages[this.currentPage]];
             },
+            activeImageAdjustment() {
+                if (!this.activeImageKey) return null;
+
+                return this.imageAdjustments[this.activeImageKey] ?? null;
+            },
         },
         methods: {
             asset(file) {
@@ -77,6 +85,82 @@
             },
             nextPage() {
                 if (this.currentPage < this.pages.length - 1) this.currentPage += 1;
+            },
+            ensureImageAdjustment(key, label = 'Imagen de producto') {
+                if (!this.imageAdjustments[key]) {
+                    this.imageAdjustments[key] = {
+                        label,
+                        zoom: 1,
+                        x: 0,
+                        y: 0,
+                    };
+                }
+
+                return this.imageAdjustments[key];
+            },
+            imageStyle(key) {
+                const adjustment = this.imageAdjustments[key] ?? { zoom: 1, x: 0, y: 0 };
+
+                return {
+                    transform: `translate3d(${adjustment.x}%, ${adjustment.y}%, 0) scale(${adjustment.zoom})`,
+                };
+            },
+            startImageDrag(key, label, event) {
+                event.preventDefault();
+
+                const adjustment = this.ensureImageAdjustment(key, label);
+                const bounds = event.currentTarget.getBoundingClientRect();
+
+                this.activeImageKey = key;
+                this.dragState = {
+                    key,
+                    pointerId: event.pointerId,
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    originX: adjustment.x,
+                    originY: adjustment.y,
+                    width: bounds.width,
+                    height: bounds.height,
+                };
+
+                event.currentTarget.setPointerCapture?.(event.pointerId);
+            },
+            dragImage(event) {
+                if (!this.dragState || this.dragState.pointerId !== event.pointerId) return;
+
+                const adjustment = this.imageAdjustments[this.dragState.key];
+                const deltaX = ((event.clientX - this.dragState.startX) / this.dragState.width) * 100;
+                const deltaY = ((event.clientY - this.dragState.startY) / this.dragState.height) * 100;
+
+                adjustment.x = this.clamp(this.dragState.originX + deltaX, -50, 50);
+                adjustment.y = this.clamp(this.dragState.originY + deltaY, -50, 50);
+            },
+            endImageDrag(event) {
+                if (!this.dragState || this.dragState.pointerId !== event.pointerId) return;
+
+                event.currentTarget.releasePointerCapture?.(event.pointerId);
+                this.dragState = null;
+            },
+            setImageZoom(event) {
+                if (!this.activeImageAdjustment) return;
+
+                this.activeImageAdjustment.zoom = this.clamp(Number(event.target.value), 0.7, 2.4);
+            },
+            nudgeImage(deltaX, deltaY) {
+                if (!this.activeImageAdjustment) return;
+
+                this.activeImageAdjustment.x = this.clamp(this.activeImageAdjustment.x + deltaX, -50, 50);
+                this.activeImageAdjustment.y = this.clamp(this.activeImageAdjustment.y + deltaY, -50, 50);
+            },
+            resetImageAdjustment() {
+                if (!this.activeImageAdjustment) return;
+
+                this.activeImageAdjustment.zoom = 1;
+                this.activeImageAdjustment.x = 0;
+                this.activeImageAdjustment.y = 0;
+            },
+            clamp(value, minimum, maximum) {
+                return Math.min(Math.max(value, minimum), maximum);
             },
         },
     }).mount('#catalog-app');

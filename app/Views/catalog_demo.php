@@ -63,6 +63,44 @@
                 </button>
             </nav>
 
+            <section class="image-editor" aria-live="polite">
+                <template v-if="activeImageAdjustment">
+                    <span class="image-editor-kicker">Ajuste de imagen</span>
+                    <strong>{{ activeImageAdjustment.label }}</strong>
+                    <p>Arrastrá la imagen directamente dentro de la máscara o usá los controles.</p>
+
+                    <label class="zoom-control">
+                        <span>Zoom</span>
+                        <input
+                            type="range"
+                            min="0.7"
+                            max="2.4"
+                            step="0.05"
+                            :value="activeImageAdjustment.zoom"
+                            @input="setImageZoom"
+                        >
+                        <output>{{ Math.round(activeImageAdjustment.zoom * 100) }}%</output>
+                    </label>
+
+                    <div class="position-controls" aria-label="Posición de la imagen">
+                        <button type="button" @click="nudgeImage(0, -8)" aria-label="Mover arriba">↑</button>
+                        <button type="button" @click="nudgeImage(-8, 0)" aria-label="Mover a la izquierda">←</button>
+                        <button type="button" @click="resetImageAdjustment" aria-label="Centrar imagen">●</button>
+                        <button type="button" @click="nudgeImage(8, 0)" aria-label="Mover a la derecha">→</button>
+                        <button type="button" @click="nudgeImage(0, 8)" aria-label="Mover abajo">↓</button>
+                    </div>
+
+                    <button type="button" class="reset-image" @click="resetImageAdjustment">
+                        Centrar y restablecer
+                    </button>
+                </template>
+                <template v-else>
+                    <span class="image-editor-kicker">Ajuste de imagen</span>
+                    <strong>Seleccioná una imagen</strong>
+                    <p>Hacé clic sobre una imagen de producto para moverla o cambiar su zoom.</p>
+                </template>
+            </section>
+
             <div class="sidebar-note">
                 <span>Regla activa</span>
                 <strong>El destacado no se repite.</strong>
@@ -118,8 +156,19 @@
                                 </div>
                                 <div class="featured-product">
                                     <div class="featured-name">Copas Gin<br>Tonic 590 ML</div>
-                                    <div class="featured-cutout">
-                                        <img :src="asset('glass-gin.png')" alt="Copa Gin Tonic">
+                                    <div
+                                        :class="['featured-cutout', 'image-mask', { active: activeImageKey === 'featured-' + featuredProduct.code }]"
+                                        @pointerdown="startImageDrag('featured-' + featuredProduct.code, 'Copas Gin Tonic 590 ML', $event)"
+                                        @pointermove="dragImage"
+                                        @pointerup="endImageDrag"
+                                        @pointercancel="endImageDrag"
+                                    >
+                                        <img
+                                            :src="asset('glass-gin.png')"
+                                            alt="Copa Gin Tonic"
+                                            :style="imageStyle('featured-' + featuredProduct.code)"
+                                            draggable="false"
+                                        >
                                     </div>
                                     <dl class="product-specs featured-specs">
                                         <template v-for="spec in featuredProduct.specs" :key="spec[0]">
@@ -162,8 +211,19 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="product-image">
-                                        <img :src="asset(product.image)" :alt="product.name">
+                                    <div
+                                        :class="['product-image', 'image-mask', { active: activeImageKey === product.code }]"
+                                        @pointerdown="startImageDrag(product.code, product.name, $event)"
+                                        @pointermove="dragImage"
+                                        @pointerup="endImageDrag"
+                                        @pointercancel="endImageDrag"
+                                    >
+                                        <img
+                                            :src="asset(product.image)"
+                                            :alt="product.name"
+                                            :style="imageStyle(product.code)"
+                                            draggable="false"
+                                        >
                                     </div>
                                 </section>
                             </div>
