@@ -19,6 +19,12 @@
         'color',
         'backgroundColor',
         'textAlign',
+        'baseWidth',
+        'baseHeight',
+        'widthScale',
+        'heightScale',
+        'offsetX',
+        'offsetY',
     ];
 
     const THEME = {
@@ -364,6 +370,34 @@
 
         if (patch.textAlign !== undefined && !['left', 'center', 'right'].includes(patch.textAlign)) {
             throw new Error(`Alineación no permitida para ${role}`);
+        }
+
+        for (const property of ['widthScale', 'heightScale']) {
+            if (
+                patch[property] !== undefined
+                && (
+                    !Number.isFinite(Number(patch[property]))
+                    || Number(patch[property]) < 0.6
+                    || Number(patch[property]) > 1
+                )
+            ) {
+                throw new Error(`Dimensión fuera del rango permitido para ${role}`);
+            }
+        }
+
+        for (const property of ['baseWidth', 'baseHeight']) {
+            if (
+                patch[property] !== undefined
+                && (!Number.isFinite(Number(patch[property])) || Number(patch[property]) <= 0)
+            ) {
+                throw new Error(`Dimensión base inválida para ${role}`);
+            }
+        }
+
+        for (const property of ['offsetX', 'offsetY']) {
+            if (patch[property] !== undefined && !Number.isFinite(Number(patch[property]))) {
+                throw new Error(`Desplazamiento inválido para ${role}`);
+            }
         }
     };
 

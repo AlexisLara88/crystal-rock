@@ -11,6 +11,9 @@
                 coverVariant: 'editorial',
                 activeImageKey: null,
                 activeTextSelection: null,
+                selectedTextElement: null,
+                textDragState: null,
+                layoutWarning: '',
                 imageAdjustments: {},
                 dragState: null,
                 floatingEditorPosition: {
@@ -107,6 +110,10 @@
                     fontSize: currentSize,
                     minFontSize: Math.max(6, Math.ceil(baseSize * 0.7)),
                     maxFontSize: Math.floor(baseSize * 1.5),
+                    widthPercent: Math.round((current.widthScale ?? 1) * 100),
+                    heightPercent: Math.round((current.heightScale ?? 1) * 100),
+                    offsetX: Math.round(current.offsetX ?? 0),
+                    offsetY: Math.round(current.offsetY ?? 0),
                 };
             },
             fontOptions() {
@@ -135,21 +142,43 @@
                 return {
                     top: `${this.floatingEditorPosition.top}px`,
                     left: `${this.floatingEditorPosition.left}px`,
+                    maxHeight: `calc(100vh - ${this.floatingEditorPosition.top + 12}px)`,
                 };
             },
         },
         mounted() {
             document.addEventListener('pointerdown', this.handleDocumentPointerDown);
+            document.addEventListener('pointermove', this.dragText);
+            document.addEventListener('pointerup', this.endTextDrag);
+            document.addEventListener('pointercancel', this.endTextDrag);
         },
         beforeUnmount() {
             document.removeEventListener('pointerdown', this.handleDocumentPointerDown);
+            document.removeEventListener('pointermove', this.dragText);
+            document.removeEventListener('pointerup', this.endTextDrag);
+            document.removeEventListener('pointercancel', this.endTextDrag);
         },
         methods: {
             asset(file) {
                 return `${window.CATALOG_ASSET_BASE}${file}`;
             },
             textStyle(templateId, role) {
-                const style = presentationEngine.resolveRoleStyle(this.presentationState, templateId, role);
+                const resolved = presentationEngine.resolveRoleStyle(this.presentationState, templateId, role);
+                const {
+                    baseWidth,
+                    baseHeight,
+                    widthScale = 1,
+                    heightScale = 1,
+                    offsetX = 0,
+                    offsetY = 0,
+                    ...style
+                } = resolved;
+
+                if (baseWidth) style.width = `${baseWidth * widthScale}px`;
+                if (baseHeight) style.height = `${baseHeight * heightScale}px`;
+
+                style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
+                style.transformOrigin = 'center';
 
                 if (['productName', 'productCode', 'productPrice', 'communityLink'].includes(role)) {
                     style.justifyContent = {
@@ -203,12 +232,16 @@
 
                 this.activeImageKey = null;
                 this.dragState = null;
+                this.layoutWarning = '';
                 this.activeTextSelection = {
                     templateId,
                     templateLabel: this.templateLabel(templateId),
                     role,
                 };
+                this.selectedTextElement = event.currentTarget;
+                this.ensureSelectedTextDimensions(event.currentTarget);
                 this.positionFloatingEditor(event.currentTarget, 560, 300);
+                this.startTextDrag(event);
             },
             selectPage(index) {
                 this.currentPage = index;
@@ -353,6 +386,9 @@
             },
             deselectText() {
                 this.activeTextSelection = null;
+                this.selectedTextElement = null;
+                this.textDragState = null;
+                this.layoutWarning = '';
             },
             deselectAll() {
                 this.deselectImage();
@@ -366,6 +402,10 @@
                     this.activeTextSelection.templateId,
                     this.activeTextSelection.role,
                 );
+                this.layoutWarning = '';
+                this.$nextTick(() => {
+                    if (this.selectedTextElement) this.ensureSelectedTextDimensions(this.selectedTextElement);
+                });
             },
             updateSelectedText(patch) {
                 if (!this.activeTextSelection) return;
@@ -376,6 +416,154 @@
                     this.activeTextSelection.role,
                     patch,
                 );
+            },
+            ensureSelectedTextDimensions(element) {
+                if (!this.activeTextSelection || !element) return;
+
+                const current = presentationEngine.resolveRoleStyle(
+                    this.presentationState,
+                    this.activeTextSelection.templateId,
+                    this.activeTextSelection.role,
+                );
+
+                if (current.baseWidth && current.baseHeight) return;
+
+                this.updateSelectedText({
+                    baseWidth: Math.max(1, element.offsetWidth),
+                    baseHeight: Math.max(1, element.offsetHeight),
+                    widthScale: 1,
+                    heightScale: 1,
+                    offsetX: 0,
+                    offsetY: 0,
+                });
+            },
+            startTextDrag(event) {
+                if (!this.activeTextSelection || !this.selectedTextElement) return;
+
+                const current = presentationEngine.resolveRoleStyle(
+                    this.presentationState,
+                    this.activeTextSelection.templateId,
+                    this.activeTextSelection.role,
+                );
+                const bounds = this.selectedTextElement.getBoundingClientRect();
+
+                this.textDragState = {
+                    pointerId: event.pointerId,
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    originX: current.offsetX ?? 0,
+                    originY: current.offsetY ?? 0,
+                    scaleX: bounds.width / Math.max(1, this.selectedTextElement.offsetWidth),
+                    scaleY: bounds.height / Math.max(1, this.selectedTextElement.offsetHeight),
+                    previousX: current.offsetX ?? 0,
+                    previousY: current.offsetY ?? 0,
+                };
+            },
+            dragText(event) {
+                if (!this.textDragState || this.textDragState.pointerId !== event.pointerId) return;
+
+                event.preventDefault();
+                const candidateX = this.textDragState.originX
+                    + ((event.clientX - this.textDragState.startX) / this.textDragState.scaleX);
+                const candidateY = this.textDragState.originY
+                    + ((event.clientY - this.textDragState.startY) / this.textDragState.scaleY);
+
+                this.applySelectedLayoutPatch({
+                    offsetX: Math.round(candidateX),
+                    offsetY: Math.round(candidateY),
+                }, {
+                    offsetX: this.textDragState.previousX,
+                    offsetY: this.textDragState.previousY,
+                }, true);
+            },
+            endTextDrag(event) {
+                if (!this.textDragState || this.textDragState.pointerId !== event.pointerId) return;
+
+                this.textDragState = null;
+            },
+            nudgeSelectedText(deltaX, deltaY) {
+                if (!this.activeTextControlState) return;
+
+                const previous = {
+                    offsetX: this.activeTextControlState.offsetX,
+                    offsetY: this.activeTextControlState.offsetY,
+                };
+
+                this.applySelectedLayoutPatch({
+                    offsetX: previous.offsetX + deltaX,
+                    offsetY: previous.offsetY + deltaY,
+                }, previous);
+            },
+            setSelectedDimension(property, event) {
+                if (!this.activeTextControlState) return;
+
+                const previous = {
+                    widthScale: this.activeTextControlState.current.widthScale ?? 1,
+                    heightScale: this.activeTextControlState.current.heightScale ?? 1,
+                };
+
+                this.applySelectedLayoutPatch({
+                    [property]: Number(event.target.value) / 100,
+                }, previous);
+            },
+            applySelectedLayoutPatch(patch, previous, dragging = false) {
+                if (!this.activeTextSelection) return;
+
+                this.updateSelectedText(patch);
+                this.$nextTick(() => {
+                    if (this.selectedLayoutIsValid()) {
+                        this.layoutWarning = '';
+
+                        if (dragging && this.textDragState) {
+                            this.textDragState.previousX = patch.offsetX;
+                            this.textDragState.previousY = patch.offsetY;
+                        }
+
+                        return;
+                    }
+
+                    this.updateSelectedText(previous);
+                    this.layoutWarning = 'Movimiento bloqueado: el elemento alcanzó el límite de su zona o tocaría otro bloque.';
+                });
+            },
+            selectedLayoutIsValid() {
+                const selected = [...document.querySelectorAll('.editable-text.active-text')];
+
+                return selected.every((element) => {
+                    const parent = element.parentElement;
+
+                    if (!parent) return false;
+
+                    const bounds = element.getBoundingClientRect();
+                    const parentBounds = parent.getBoundingClientRect();
+                    const tolerance = 1;
+                    const insideParent = bounds.left >= parentBounds.left - tolerance
+                        && bounds.top >= parentBounds.top - tolerance
+                        && bounds.right <= parentBounds.right + tolerance
+                        && bounds.bottom <= parentBounds.bottom + tolerance;
+
+                    if (!insideParent) return false;
+
+                    return [...parent.children]
+                        .filter((sibling) => sibling !== element && this.isProtectedLayoutSibling(sibling))
+                        .every((sibling) => !this.rectanglesOverlap(bounds, sibling.getBoundingClientRect()));
+                });
+            },
+            isProtectedLayoutSibling(element) {
+                if (!(element instanceof HTMLElement)) return false;
+                if (element.matches('img, i, hr, .sheet-background, .cover-shade, .cover-line')) return false;
+
+                const bounds = element.getBoundingClientRect();
+
+                return bounds.width > 1 && bounds.height > 1 && getComputedStyle(element).visibility !== 'hidden';
+            },
+            rectanglesOverlap(first, second) {
+                const gap = 1;
+
+                return first.left < second.right - gap
+                    && first.right > second.left + gap
+                    && first.top < second.bottom - gap
+                    && first.bottom > second.top + gap;
             },
             setSelectedFont(event) {
                 this.updateSelectedText({ fontFamily: `font:${event.target.value}` });

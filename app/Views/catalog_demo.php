@@ -468,6 +468,47 @@
                 <output>{{ activeTextControlState.fontSize }} px</output>
             </label>
 
+            <div class="layout-editor">
+                <div class="layout-editor-heading">
+                    <span>Posición dentro de la zona</span>
+                    <output>X {{ activeTextControlState.offsetX }} · Y {{ activeTextControlState.offsetY }}</output>
+                </div>
+                <div class="text-position-controls" aria-label="Ajuste fino de posición">
+                    <button type="button" @click="nudgeSelectedText(0, -4)" aria-label="Mover arriba">↑</button>
+                    <button type="button" @click="nudgeSelectedText(-4, 0)" aria-label="Mover a la izquierda">←</button>
+                    <button type="button" class="position-center" disabled aria-label="Posición actual">●</button>
+                    <button type="button" @click="nudgeSelectedText(4, 0)" aria-label="Mover a la derecha">→</button>
+                    <button type="button" @click="nudgeSelectedText(0, 4)" aria-label="Mover abajo">↓</button>
+                </div>
+                <small>También podés arrastrar directamente el texto seleccionado.</small>
+            </div>
+
+            <label class="inspector-field dimension-field">
+                <span>Ancho del bloque</span>
+                <input
+                    type="range"
+                    min="60"
+                    max="100"
+                    step="1"
+                    :value="activeTextControlState.widthPercent"
+                    @input="setSelectedDimension('widthScale', $event)"
+                >
+                <output>{{ activeTextControlState.widthPercent }}%</output>
+            </label>
+
+            <label class="inspector-field dimension-field">
+                <span>Alto del bloque</span>
+                <input
+                    type="range"
+                    min="60"
+                    max="100"
+                    step="1"
+                    :value="activeTextControlState.heightPercent"
+                    @input="setSelectedDimension('heightScale', $event)"
+                >
+                <output>{{ activeTextControlState.heightPercent }}%</output>
+            </label>
+
             <div class="inspector-row">
                 <label class="inspector-field">
                     <span>Peso</span>
@@ -549,6 +590,8 @@
                 </div>
             </div>
         </div>
+
+        <p v-if="layoutWarning" class="layout-warning" role="alert">{{ layoutWarning }}</p>
 
         <button type="button" class="text-reset-button" @click="resetSelectedText">
             Restablecer elemento

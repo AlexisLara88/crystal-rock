@@ -15,6 +15,7 @@ La fase visual D1 incluye una muestra navegable con datos fijos:
 - modelo de presentación separado por tema, plantilla y rol visual.
 - selección contextual de todos los roles de texto.
 - edición por variante de tipografía, tamaño, peso, color, fondo y alineación.
+- arrastre y ajuste fino de posición, ancho y alto con límites de zona y bloqueo de colisiones.
 
 La importación de Excel, validaciones y generación PDF pertenecen a las siguientes fases.
 

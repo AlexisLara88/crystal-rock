@@ -87,3 +87,64 @@ test('cada estado de presentación es independiente', () => {
     assert.equal(first.theme.colors.wine, '#000000');
     assert.equal(second.theme.colors.wine, '#702d45');
 });
+
+test('acepta dimensiones y desplazamientos controlados por variante', () => {
+    const state = presentation.createPresentationState();
+
+    presentation.updateRoleStyle(state, 'grid2', 'productName', {
+        baseWidth: 320,
+        baseHeight: 74,
+        widthScale: 0.75,
+        heightScale: 0.6,
+        offsetX: -18,
+        offsetY: 24,
+    });
+
+    const style = presentation.resolveRoleStyle(state, 'grid2', 'productName');
+
+    assert.equal(style.baseWidth, 320);
+    assert.equal(style.baseHeight, 74);
+    assert.equal(style.widthScale, 0.75);
+    assert.equal(style.heightScale, 0.6);
+    assert.equal(style.offsetX, -18);
+    assert.equal(style.offsetY, 24);
+});
+
+test('rechaza dimensiones o desplazamientos inválidos', () => {
+    const state = presentation.createPresentationState();
+
+    assert.throws(
+        () => presentation.updateRoleStyle(state, 'grid4', 'productPrice', { widthScale: 0.59 }),
+        /Dimensión fuera del rango/,
+    );
+    assert.throws(
+        () => presentation.updateRoleStyle(state, 'grid4', 'productPrice', { heightScale: 1.01 }),
+        /Dimensión fuera del rango/,
+    );
+    assert.throws(
+        () => presentation.updateRoleStyle(state, 'grid4', 'productPrice', { baseWidth: 0 }),
+        /Dimensión base inválida/,
+    );
+    assert.throws(
+        () => presentation.updateRoleStyle(state, 'grid4', 'productPrice', { offsetX: Number.NaN }),
+        /Desplazamiento inválido/,
+    );
+});
+
+test('restablece también los ajustes geométricos del rol', () => {
+    const state = presentation.createPresentationState();
+
+    presentation.updateRoleStyle(state, 'featured', 'category', {
+        baseWidth: 280,
+        baseHeight: 75,
+        widthScale: 0.8,
+        offsetX: 15,
+    });
+    presentation.resetRoleStyle(state, 'featured', 'category');
+
+    const style = presentation.resolveRoleStyle(state, 'featured', 'category');
+
+    assert.equal(style.baseWidth, undefined);
+    assert.equal(style.widthScale, undefined);
+    assert.equal(style.offsetX, undefined);
+});
