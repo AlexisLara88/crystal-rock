@@ -168,6 +168,34 @@ button {
     white-space: nowrap;
 }
 
+.pdf-proof-button:disabled {
+    cursor: wait;
+    opacity: .68;
+}
+
+.pdf-export-error {
+    max-width: 210px;
+    color: #a13b3b;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.pdf-export-stage {
+    position: fixed;
+    z-index: -1;
+    top: 0;
+    left: -10000px;
+    width: 595px;
+    pointer-events: none;
+}
+
+.pdf-export-stage .catalog-sheet {
+    margin: 0;
+    box-shadow: none;
+    transform: none;
+}
+
 .studio-main {
     display: grid;
     grid-template-columns: 326px minmax(0, 1fr);

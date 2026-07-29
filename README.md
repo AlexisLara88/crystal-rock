@@ -20,10 +20,10 @@ La fase visual D1 incluye una muestra navegable con datos fijos:
 - paleta flotante amplia, legible y reposicionable, independiente del elemento seleccionado.
 - selección de texto neutra: un clic no altera dimensiones ni posición.
 - historial de sesión con deshacer/rehacer, restablecimientos amplios y advertencias visuales.
-- contrato de presentación versionado y prueba técnica PDF A4 de tres páginas.
-- descarga PDF con portada, producto destacado y grilla de cuatro productos.
+- contrato de presentación versionado y prueba técnica mPDF A4.
+- descarga de las siete hojas que el editor está mostrando, con los ajustes actuales de texto e imagen.
 
-La importación de Excel y sus validaciones pertenecen a la siguiente fase. El PDF actual es una prueba técnica con datos fijos; EV8 conectará el estado del editor y los productos importados.
+La importación de Excel y sus validaciones pertenecen a la siguiente fase. La descarga visible genera una copia gráfica A4 fiel al estado de la sesión; la ruta mPDF permanece como prueba técnica interna hasta que EV8 conecte el modelo normalizado y los productos importados.
 
 ## Stack
 
@@ -31,8 +31,9 @@ La importación de Excel y sus validaciones pertenecen a la siguiente fase. El P
 - CodeIgniter 4
 - Vue 3 mediante CDN
 - CSS propio para las composiciones A4
+- html2canvas 1.4 y jsPDF 4.2 para la exportación visual de la demo
 - MariaDB/MySQL previsto para el producto completo
-- mPDF 8.3 para la generación PDF
+- mPDF 8.3 previsto como motor estructurado del producto
 
 ## Inicio local
 
@@ -58,8 +59,9 @@ Rutas disponibles:
 /opt/lampp/bin/php vendor/bin/phpunit
 /opt/lampp/bin/php -l app/Views/catalog_demo.php
 node --check public/assets/js/catalog-demo.js
+node --check public/assets/js/catalog-pdf-export.js
 node --check public/assets/js/catalog-presentation.js
-node tests/js/catalog-presentation.test.js
+node --test tests/js/catalog-presentation.test.js tests/js/catalog-pdf-export.test.js
 composer audit --locked
 ```
 

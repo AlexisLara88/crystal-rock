@@ -1,6 +1,7 @@
 (() => {
     const { createApp } = Vue;
     const presentationEngine = window.CatalogPresentation;
+    const pdfExportEngine = window.CatalogPdfExport;
 
     createApp({
         data() {
@@ -26,6 +27,9 @@
                 historyFuture: [],
                 historyCurrent: JSON.stringify({ presentationState, imageAdjustments }),
                 historyTimer: null,
+                pdfExporting: false,
+                pdfExportProgress: 0,
+                pdfExportError: '',
                 floatingEditorPosition: {
                     top: 96,
                     left: 12,
@@ -91,6 +95,12 @@
             },
             canRedo() {
                 return this.historyFuture.length > 0;
+            },
+            pdfExportButtonLabel() {
+                if (!this.pdfExporting) return 'Descargar PDF actual';
+                if (!this.pdfExportProgress) return 'Preparando PDF…';
+
+                return `Generando ${this.pdfExportProgress} / ${this.pages.length}`;
             },
             activeImageAdjustment() {
                 if (!this.activeImageKey) return null;
@@ -200,6 +210,94 @@
         methods: {
             asset(file) {
                 return `${window.CATALOG_ASSET_BASE}${file}`;
+            },
+            async exportCurrentPdf() {
+                if (this.pdfExporting) return;
+
+                this.pdfExporting = true;
+                this.pdfExportProgress = 0;
+                this.pdfExportError = '';
+                this.flushEditorHistory();
+                this.deselectAll();
+
+                const previousShowAll = this.showAll;
+                let exportStage = null;
+                this.showAll = true;
+
+                try {
+                    await this.$nextTick();
+                    await this.waitForExportAssets();
+
+                    if (
+                        typeof window.html2canvas !== 'function'
+                        || !window.jspdf?.jsPDF
+                        || typeof pdfExportEngine?.exportSheets !== 'function'
+                    ) {
+                        throw new Error('No se pudieron cargar las herramientas de exportación.');
+                    }
+
+                    exportStage = this.createPdfExportStage();
+                    const sheets = [...exportStage.querySelectorAll('.catalog-sheet')];
+
+                    if (sheets.length !== this.pages.length) {
+                        throw new Error('No se encontraron todas las páginas del catálogo.');
+                    }
+
+                    await pdfExportEngine.exportSheets({
+                        sheets,
+                        capture: window.html2canvas,
+                        PdfConstructor: window.jspdf.jsPDF,
+                        onProgress: async (pageNumber) => {
+                            this.pdfExportProgress = pageNumber;
+                            await this.$nextTick();
+                        },
+                    });
+                } catch (error) {
+                    console.error('No fue posible exportar el catálogo actual.', error);
+                    this.pdfExportError = error instanceof Error
+                        ? error.message
+                        : 'No fue posible generar el PDF.';
+                } finally {
+                    exportStage?.remove();
+                    this.showAll = previousShowAll;
+                    this.pdfExporting = false;
+                    this.pdfExportProgress = 0;
+                }
+            },
+            createPdfExportStage() {
+                const stage = document.createElement('div');
+                stage.className = 'pdf-export-stage';
+
+                document.querySelectorAll('.catalog-sheet').forEach((sheet) => {
+                    stage.appendChild(sheet.cloneNode(true));
+                });
+
+                document.body.appendChild(stage);
+
+                return stage;
+            },
+            async waitForExportAssets() {
+                if (document.fonts?.ready) await document.fonts.ready;
+
+                const images = [...document.querySelectorAll('.catalog-sheet img')];
+
+                await Promise.all(images.map((image) => {
+                    if (image.complete && image.naturalWidth > 0) return Promise.resolve();
+                    if (typeof image.decode === 'function') {
+                        return image.decode().catch(() => {
+                            throw new Error(`No se pudo preparar la imagen ${image.alt || 'del catálogo'}.`);
+                        });
+                    }
+
+                    return new Promise((resolve, reject) => {
+                        image.addEventListener('load', resolve, { once: true });
+                        image.addEventListener(
+                            'error',
+                            () => reject(new Error(`No se pudo cargar la imagen ${image.alt || 'del catálogo'}.`)),
+                            { once: true },
+                        );
+                    });
+                }));
             },
             editorSnapshot() {
                 const meaningfulImageAdjustments = Object.fromEntries(

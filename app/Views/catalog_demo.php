@@ -35,9 +35,15 @@
             <button type="button" class="ghost-button" @click="toggleShowAll">
                 {{ showAll ? 'Ver una página' : 'Ver catálogo completo' }}
             </button>
-            <a class="ghost-button pdf-proof-button" href="<?= site_url('demo/catalogo/pdf-prueba') ?>">
-                Descargar PDF de prueba
-            </a>
+            <button
+                type="button"
+                class="ghost-button pdf-proof-button"
+                :disabled="pdfExporting"
+                @click="exportCurrentPdf"
+            >
+                {{ pdfExportButtonLabel }}
+            </button>
+            <span v-if="pdfExportError" class="pdf-export-error" role="alert">{{ pdfExportError }}</span>
         </div>
     </header>
 
@@ -642,7 +648,10 @@
     window.CATALOG_ASSET_BASE = <?= json_encode(base_url('assets/img/catalog/'), JSON_UNESCAPED_SLASHES) ?>;
 </script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://unpkg.com/jspdf@4.2.1/dist/jspdf.umd.min.js"></script>
 <script src="<?= base_url('assets/js/catalog-presentation.js') ?>"></script>
+<script src="<?= base_url('assets/js/catalog-pdf-export.js') ?>"></script>
 <script src="<?= base_url('assets/js/' . $pageScript) ?>"></script>
 </body>
 </html>
