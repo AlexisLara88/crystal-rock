@@ -825,9 +825,9 @@
                                 <th>Producto</th>
                                 <th>Código</th>
                                 <th>Precio</th>
-                                <th>@Image</th>
                                 <th>Vista previa</th>
                                 <th>Estado</th>
+                                <th>Imagen (@Image)</th>
                                 <th>Resolver</th>
                             </tr>
                         </thead>
@@ -841,12 +841,6 @@
                                 <td>{{ row.values.name || '—' }}</td>
                                 <td>{{ row.values.code || '—' }}</td>
                                 <td>{{ row.values.price || '—' }}</td>
-                                <td>
-                                    <strong class="image-reference">{{ row.values.image || '—' }}</strong>
-                                    <small v-if="imageMatchForRow(row)">
-                                        {{ imageMatchStatusLabel(imageMatchForRow(row).status) }}
-                                    </small>
-                                </td>
                                 <td>
                                     <img
                                         v-if="imageMatchForRow(row)?.image"
@@ -865,6 +859,12 @@
                                     </small>
                                 </td>
                                 <td>
+                                    <strong class="image-reference">{{ row.values.image || '—' }}</strong>
+                                    <small v-if="imageMatchForRow(row)">
+                                        {{ imageMatchStatusLabel(imageMatchForRow(row).status) }}
+                                    </small>
+                                </td>
+                                <td>
                                     <div class="import-row-actions">
                                         <button
                                             v-if="isRowExcluded(row)"
@@ -875,7 +875,7 @@
                                         </button>
                                         <template v-else>
                                             <label
-                                                class="row-file-action"
+                                                class="row-file-action replace-row-action"
                                                 :class="{ disabled: imageReplacementRow !== null }"
                                             >
                                                 <input
@@ -888,6 +888,7 @@
                                             </label>
                                             <button
                                                 type="button"
+                                                class="generic-row-action"
                                                 :disabled="imageReplacementRow !== null"
                                                 @click="useGenericImage(row)"
                                             >

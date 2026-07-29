@@ -647,8 +647,12 @@ button {
     font-weight: 700;
 }
 
-.import-table td:nth-child(7) {
+.import-table td:nth-child(6) {
     min-width: 210px;
+}
+
+.import-table td:nth-child(7) {
+    min-width: 118px;
 }
 
 .import-table td:nth-child(8) {
@@ -668,6 +672,7 @@ button {
 .import-table th:last-child {
     z-index: 2;
     background: #f3eee7;
+    text-align: center;
 }
 
 .import-table td small {
@@ -2602,9 +2607,29 @@ body {
     background: var(--ui-surface-raised);
 }
 
+.import-row-actions .replace-row-action {
+    border-color: rgba(169, 188, 168, .5);
+    color: #d4e5d3;
+    background: rgba(88, 106, 91, .42);
+}
+
+.import-row-actions .generic-row-action {
+    border-color: rgba(224, 154, 126, .52);
+    color: #f2c2af;
+    background: rgba(201, 121, 91, .26);
+}
+
 .import-row-actions .exclude-row-action {
-    border-color: rgba(213, 151, 173, .35);
-    color: var(--ui-wine);
+    border-color: rgba(213, 151, 173, .48);
+    color: #edb7ca;
+    background: rgba(112, 45, 69, .36);
+}
+
+.import-row-actions .replace-row-action:hover,
+.import-row-actions .generic-row-action:hover,
+.import-row-actions .exclude-row-action:hover {
+    border-color: currentColor;
+    filter: brightness(1.16);
 }
 
 .import-image-placeholder {
