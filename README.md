@@ -23,7 +23,17 @@ La fase visual D1 incluye una muestra navegable con datos fijos:
 - contrato de presentación versionado y prueba técnica mPDF A4.
 - descarga de las siete hojas que el editor está mostrando, con los ajustes actuales de texto e imagen.
 
-La importación de Excel y sus validaciones pertenecen a la siguiente fase. La descarga visible genera una copia gráfica A4 fiel al estado de la sesión; la ruta mPDF permanece como prueba técnica interna hasta que EV8 conecte el modelo normalizado y los productos importados.
+El primer incremento de D2 agrega:
+
+- carga local de archivos `.xlsx` y `.csv` de hasta 5 MB;
+- detección de hoja, encabezados y aliases de columnas;
+- conservación de códigos como texto y precios con su formato visible;
+- validación inicial de obligatorios, precios, categorías y códigos repetidos;
+- resumen de importación y revisión por fila antes de componer.
+
+Esta primera revisión no reemplaza todavía los datos de las plantillas ni resuelve los archivos indicados en `@Image`. Esos pasos continúan en D2 antes de entrar a la composición automática de D3.
+
+La descarga visible genera una copia gráfica A4 fiel al estado de la sesión; la ruta mPDF permanece como prueba técnica interna hasta que EV8 conecte el modelo normalizado y los productos importados.
 
 ## Stack
 
@@ -32,6 +42,7 @@ La importación de Excel y sus validaciones pertenecen a la siguiente fase. La d
 - Vue 3 mediante CDN
 - CSS propio para las composiciones A4
 - html2canvas 1.4 y jsPDF 4.2 para la exportación visual de la demo
+- PhpSpreadsheet 5.9 para lectura de Excel y CSV
 - MariaDB/MySQL previsto para el producto completo
 - mPDF 8.3 previsto como motor estructurado del producto
 
@@ -50,8 +61,11 @@ Rutas disponibles:
 ```text
 /
 /demo/catalogo
+/demo/catalogo/importar
 /demo/catalogo/pdf-prueba
 ```
+
+La ruta `importar` recibe solicitudes `POST` con protección CSRF y un campo de archivo llamado `catalogFile`.
 
 ## Verificaciones
 

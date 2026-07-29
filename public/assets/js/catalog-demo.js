@@ -30,6 +30,12 @@
                 pdfExporting: false,
                 pdfExportProgress: 0,
                 pdfExportError: '',
+                importPanelOpen: false,
+                importingCatalog: false,
+                selectedCatalogFile: null,
+                importedFilename: '',
+                importResult: null,
+                importError: '',
                 floatingEditorPosition: {
                     top: 96,
                     left: 12,
@@ -210,6 +216,96 @@
         methods: {
             asset(file) {
                 return `${window.CATALOG_ASSET_BASE}${file}`;
+            },
+            openImportPanel() {
+                this.deselectAll();
+                this.importPanelOpen = true;
+                this.importError = '';
+            },
+            closeImportPanel() {
+                if (this.importingCatalog) return;
+
+                this.importPanelOpen = false;
+            },
+            selectCatalogFile(event) {
+                const [file] = event.target.files ?? [];
+
+                this.selectedCatalogFile = file ?? null;
+                this.importResult = null;
+                this.importedFilename = '';
+                this.importError = '';
+            },
+            async importCatalogFile() {
+                if (!this.selectedCatalogFile || this.importingCatalog) return;
+
+                const extension = this.selectedCatalogFile.name.split('.').pop()?.toLowerCase();
+                if (!['xlsx', 'csv'].includes(extension)) {
+                    this.importError = 'Seleccioná un archivo .xlsx o .csv.';
+                    return;
+                }
+                if (this.selectedCatalogFile.size > 5 * 1024 * 1024) {
+                    this.importError = 'El archivo supera el límite de 5 MB para la demo.';
+                    return;
+                }
+
+                this.importingCatalog = true;
+                this.importError = '';
+                const formData = new FormData();
+
+                formData.append('catalogFile', this.selectedCatalogFile);
+                formData.append(window.CATALOG_CSRF.name, window.CATALOG_CSRF.hash);
+
+                try {
+                    const response = await fetch(window.CATALOG_IMPORT_URL, {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                        },
+                    });
+                    const payload = await response.json().catch(() => null);
+
+                    if (payload?.csrfHash) window.CATALOG_CSRF.hash = payload.csrfHash;
+                    if (!response.ok || !payload?.ok) {
+                        throw new Error(payload?.message || 'No fue posible analizar el archivo.');
+                    }
+
+                    this.importedFilename = payload.filename;
+                    this.importResult = payload.result;
+                } catch (error) {
+                    console.error('No fue posible importar el catálogo.', error);
+                    this.importError = error instanceof Error
+                        ? error.message
+                        : 'No fue posible analizar el archivo.';
+                } finally {
+                    this.importingCatalog = false;
+                }
+            },
+            importFieldLabel(field) {
+                return {
+                    name: 'Nombre',
+                    measurements: 'Medidas',
+                    material: 'Material',
+                    packaging: 'Embalaje',
+                    pack: 'Pack',
+                    master: 'Master',
+                    code: 'Código',
+                    price: 'Precio',
+                    image: 'Imagen',
+                    category: 'Categoría',
+                    featured: 'Destacado',
+                }[field] ?? field;
+            },
+            importStatusLabel(status) {
+                return {
+                    valid: 'Correcto',
+                    warning: 'Revisar',
+                    error: 'Bloqueado',
+                }[status] ?? status;
+            },
+            importRowIssues(row) {
+                return [...row.errors, ...row.warnings].join(' · ');
             },
             async exportCurrentPdf() {
                 if (this.pdfExporting) return;

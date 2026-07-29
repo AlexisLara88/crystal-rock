@@ -24,6 +24,9 @@
         </div>
 
         <div class="header-actions">
+            <button type="button" class="ghost-button import-button" @click="openImportPanel">
+                Cargar Excel/CSV
+            </button>
             <label class="theme-select">
                 <span>Estilo de portada</span>
                 <select v-model="coverVariant">
@@ -642,10 +645,144 @@
         </div>
         <small>La selección y este panel no aparecen en el PDF.</small>
     </aside>
+
+    <div
+        v-if="importPanelOpen"
+        class="import-overlay"
+        role="presentation"
+        @pointerdown.self="closeImportPanel"
+    >
+        <section class="import-dialog" role="dialog" aria-modal="true" aria-labelledby="import-dialog-title">
+            <header class="import-dialog-header">
+                <div>
+                    <span class="eyebrow">D2 · Importación</span>
+                    <h2 id="import-dialog-title">Revisar datos antes de diseñar</h2>
+                    <p>Este paso solo lee y valida el archivo. Todavía no reemplaza los productos del catálogo.</p>
+                </div>
+                <button
+                    type="button"
+                    class="import-close"
+                    aria-label="Cerrar importación"
+                    :disabled="importingCatalog"
+                    @click="closeImportPanel"
+                >×</button>
+            </header>
+
+            <form class="import-form" @submit.prevent="importCatalogFile">
+                <label class="import-dropzone">
+                    <input
+                        ref="catalogFileInput"
+                        type="file"
+                        name="catalogFile"
+                        accept=".xlsx,.csv"
+                        @change="selectCatalogFile"
+                    >
+                    <span class="import-file-icon">↥</span>
+                    <strong>{{ selectedCatalogFile ? selectedCatalogFile.name : 'Elegir Excel o CSV' }}</strong>
+                    <small>Hasta 5 MB · La demo no guarda el archivo</small>
+                </label>
+                <button
+                    type="submit"
+                    class="import-submit"
+                    :disabled="!selectedCatalogFile || importingCatalog"
+                >
+                    {{ importingCatalog ? 'Leyendo archivo…' : 'Analizar archivo' }}
+                </button>
+            </form>
+
+            <p v-if="importError" class="import-message import-message-error" role="alert">
+                {{ importError }}
+            </p>
+
+            <template v-if="importResult">
+                <div class="import-summary">
+                    <div>
+                        <span>Archivo</span>
+                        <strong>{{ importedFilename }}</strong>
+                    </div>
+                    <div>
+                        <span>Hoja activa</span>
+                        <strong>{{ importResult.activeSheet }}</strong>
+                    </div>
+                    <div>
+                        <span>Productos</span>
+                        <strong>{{ importResult.summary.totalRows }}</strong>
+                    </div>
+                    <div class="summary-warning">
+                        <span>Advertencias</span>
+                        <strong>{{ importResult.summary.warningRows }}</strong>
+                    </div>
+                    <div :class="{ 'summary-error': importResult.summary.errorRows > 0 }">
+                        <span>Errores</span>
+                        <strong>{{ importResult.summary.errorRows }}</strong>
+                    </div>
+                </div>
+
+                <div v-if="importResult.globalWarnings.length" class="import-notices">
+                    <p v-for="warning in importResult.globalWarnings" :key="warning">{{ warning }}</p>
+                </div>
+
+                <div class="import-mapping">
+                    <span class="eyebrow">Mapeo detectado</span>
+                    <div>
+                        <span
+                            v-for="header in importResult.headers"
+                            :key="header.column"
+                            :class="{ unknown: !header.field }"
+                        >
+                            {{ header.label }} → {{ header.field ? importFieldLabel(header.field) : 'Sin usar' }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="import-table-wrap">
+                    <table class="import-table">
+                        <thead>
+                            <tr>
+                                <th>Fila</th>
+                                <th>Producto</th>
+                                <th>Código</th>
+                                <th>Precio</th>
+                                <th>@Image</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="row in importResult.rows" :key="row.sourceRow">
+                                <td>{{ row.sourceRow }}</td>
+                                <td>{{ row.values.name || '—' }}</td>
+                                <td>{{ row.values.code || '—' }}</td>
+                                <td>{{ row.values.price || '—' }}</td>
+                                <td>{{ row.values.image || '—' }}</td>
+                                <td>
+                                    <span :class="['row-status', 'row-status-' + row.status]">
+                                        {{ importStatusLabel(row.status) }}
+                                    </span>
+                                    <small v-if="row.errors.length || row.warnings.length">
+                                        {{ importRowIssues(row) }}
+                                    </small>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <footer class="import-dialog-footer">
+                    <span>Vista previa temporal · Los datos todavía no alimentan las plantillas.</span>
+                    <button type="button" class="ghost-button" @click="closeImportPanel">Cerrar revisión</button>
+                </footer>
+            </template>
+        </section>
+    </div>
 </div>
 
 <script>
     window.CATALOG_ASSET_BASE = <?= json_encode(base_url('assets/img/catalog/'), JSON_UNESCAPED_SLASHES) ?>;
+    window.CATALOG_IMPORT_URL = <?= json_encode(site_url('demo/catalogo/importar'), JSON_UNESCAPED_SLASHES) ?>;
+    window.CATALOG_CSRF = {
+        name: <?= json_encode(csrf_token()) ?>,
+        hash: <?= json_encode(csrf_hash()) ?>,
+    };
 </script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
