@@ -13,6 +13,7 @@
                 activeTextSelection: null,
                 selectedTextElement: null,
                 textDragState: null,
+                textBaseDimensions: {},
                 layoutWarning: '',
                 imageAdjustments: {},
                 dragState: null,
@@ -244,7 +245,7 @@
                     role,
                 };
                 this.selectedTextElement = event.currentTarget;
-                this.ensureSelectedTextDimensions(event.currentTarget);
+                this.captureSelectedTextDimensions(event.currentTarget);
                 this.prepareFloatingEditor();
                 this.startTextDrag(event);
             },
@@ -478,15 +479,15 @@
             resetSelectedText() {
                 if (!this.activeTextSelection) return;
 
+                const dimensionKey = this.selectedTextDimensionKey();
+
                 presentationEngine.resetRoleStyle(
                     this.presentationState,
                     this.activeTextSelection.templateId,
                     this.activeTextSelection.role,
                 );
+                delete this.textBaseDimensions[dimensionKey];
                 this.layoutWarning = '';
-                this.$nextTick(() => {
-                    if (this.selectedTextElement) this.ensureSelectedTextDimensions(this.selectedTextElement);
-                });
             },
             updateSelectedText(patch) {
                 if (!this.activeTextSelection) return;
@@ -498,25 +499,28 @@
                     patch,
                 );
             },
-            ensureSelectedTextDimensions(element) {
-                if (!this.activeTextSelection || !element) return;
+            selectedTextDimensionKey() {
+                if (!this.activeTextSelection) return '';
+
+                return `${this.activeTextSelection.templateId}:${this.activeTextSelection.role}`;
+            },
+            captureSelectedTextDimensions(element) {
+                if (!this.activeTextSelection || !element) return null;
 
                 const current = presentationEngine.resolveRoleStyle(
                     this.presentationState,
                     this.activeTextSelection.templateId,
                     this.activeTextSelection.role,
                 );
+                const key = this.selectedTextDimensionKey();
+                const dimensions = {
+                    baseWidth: current.baseWidth ?? Math.max(1, element.offsetWidth),
+                    baseHeight: current.baseHeight ?? Math.max(1, element.offsetHeight),
+                };
 
-                if (current.baseWidth && current.baseHeight) return;
+                this.textBaseDimensions[key] = dimensions;
 
-                this.updateSelectedText({
-                    baseWidth: Math.max(1, element.offsetWidth),
-                    baseHeight: Math.max(1, element.offsetHeight),
-                    widthScale: 1,
-                    heightScale: 1,
-                    offsetX: 0,
-                    offsetY: 0,
-                });
+                return dimensions;
             },
             startTextDrag(event) {
                 if (!this.activeTextSelection || !this.selectedTextElement) return;
@@ -536,26 +540,28 @@
                     originY: current.offsetY ?? 0,
                     scaleX: bounds.width / Math.max(1, this.selectedTextElement.offsetWidth),
                     scaleY: bounds.height / Math.max(1, this.selectedTextElement.offsetHeight),
-                    previousX: current.offsetX ?? 0,
-                    previousY: current.offsetY ?? 0,
+                    hasMoved: false,
                 };
             },
             dragText(event) {
                 if (!this.textDragState || this.textDragState.pointerId !== event.pointerId) return;
 
+                const clientDeltaX = event.clientX - this.textDragState.startX;
+                const clientDeltaY = event.clientY - this.textDragState.startY;
+
+                if (!this.textDragState.hasMoved && Math.hypot(clientDeltaX, clientDeltaY) < 4) return;
+
+                this.textDragState.hasMoved = true;
                 event.preventDefault();
                 const candidateX = this.textDragState.originX
-                    + ((event.clientX - this.textDragState.startX) / this.textDragState.scaleX);
+                    + (clientDeltaX / this.textDragState.scaleX);
                 const candidateY = this.textDragState.originY
-                    + ((event.clientY - this.textDragState.startY) / this.textDragState.scaleY);
+                    + (clientDeltaY / this.textDragState.scaleY);
 
                 this.applySelectedLayoutPatch({
                     offsetX: Math.round(candidateX),
                     offsetY: Math.round(candidateY),
-                }, {
-                    offsetX: this.textDragState.previousX,
-                    offsetY: this.textDragState.previousY,
-                }, true);
+                });
             },
             endTextDrag(event) {
                 if (!this.textDragState || this.textDragState.pointerId !== event.pointerId) return;
@@ -565,45 +571,47 @@
             nudgeSelectedText(deltaX, deltaY) {
                 if (!this.activeTextControlState) return;
 
-                const previous = {
-                    offsetX: this.activeTextControlState.offsetX,
-                    offsetY: this.activeTextControlState.offsetY,
-                };
-
                 this.applySelectedLayoutPatch({
-                    offsetX: previous.offsetX + (deltaX * this.activeTextControlState.nudgeStep),
-                    offsetY: previous.offsetY + (deltaY * this.activeTextControlState.nudgeStep),
-                }, previous);
+                    offsetX: this.activeTextControlState.offsetX
+                        + (deltaX * this.activeTextControlState.nudgeStep),
+                    offsetY: this.activeTextControlState.offsetY
+                        + (deltaY * this.activeTextControlState.nudgeStep),
+                });
             },
             setSelectedDimension(property, event) {
-                if (!this.activeTextControlState) return;
+                if (!this.activeTextControlState || !this.selectedTextElement) return;
 
-                const previous = {
-                    widthScale: this.activeTextControlState.current.widthScale ?? 1,
-                    heightScale: this.activeTextControlState.current.heightScale ?? 1,
-                };
-
+                const dimensions = this.textBaseDimensions[this.selectedTextDimensionKey()]
+                    ?? this.captureSelectedTextDimensions(this.selectedTextElement);
                 this.applySelectedLayoutPatch({
+                    ...dimensions,
                     [property]: Number(event.target.value) / 100,
-                }, previous);
+                });
             },
-            applySelectedLayoutPatch(patch, previous, dragging = false) {
+            applySelectedLayoutPatch(patch) {
                 if (!this.activeTextSelection) return;
+
+                const { templateId, role } = this.activeTextSelection;
+                const previousOverride = presentationEngine.getRoleOverride(
+                    this.presentationState,
+                    templateId,
+                    role,
+                );
 
                 this.updateSelectedText(patch);
                 this.$nextTick(() => {
                     if (this.selectedLayoutIsValid()) {
                         this.layoutWarning = '';
 
-                        if (dragging && this.textDragState) {
-                            this.textDragState.previousX = patch.offsetX;
-                            this.textDragState.previousY = patch.offsetY;
-                        }
-
                         return;
                     }
 
-                    this.updateSelectedText(previous);
+                    presentationEngine.replaceRoleOverride(
+                        this.presentationState,
+                        templateId,
+                        role,
+                        previousOverride,
+                    );
                     this.layoutWarning = 'Movimiento bloqueado: el elemento alcanzó el límite de su zona.';
                 });
             },

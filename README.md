@@ -18,6 +18,7 @@ La fase visual D1 incluye una muestra navegable con datos fijos:
 - arrastre y ajuste fino de posición, ancho y alto con límites de zona y bloqueo de colisiones.
 - matriz declarativa de compatibilidad entre los 21 roles visuales y las nueve variantes.
 - paleta flotante amplia, legible y reposicionable, independiente del elemento seleccionado.
+- selección de texto neutra: un clic no altera dimensiones ni posición.
 
 La importación de Excel, validaciones y generación PDF pertenecen a las siguientes fases.
 

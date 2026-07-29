@@ -199,3 +199,41 @@ test('cada rol publica límites geométricos y una zona comprensible', () => {
         assert.equal(definition.layout.movement, 'both');
     }
 });
+
+test('restaura exactamente un override previo después de un ajuste inválido', () => {
+    const state = presentation.createPresentationState();
+
+    presentation.updateRoleStyle(state, 'coverEditorial', 'promotionValue', {
+        color: '#123456',
+        fontWeight: 700,
+    });
+    const snapshot = presentation.getRoleOverride(state, 'coverEditorial', 'promotionValue');
+
+    presentation.updateRoleStyle(state, 'coverEditorial', 'promotionValue', {
+        baseWidth: 120,
+        baseHeight: 40,
+        widthScale: 0.6,
+        offsetY: 18,
+    });
+    presentation.replaceRoleOverride(state, 'coverEditorial', 'promotionValue', snapshot);
+
+    const style = presentation.resolveRoleStyle(state, 'coverEditorial', 'promotionValue');
+
+    assert.equal(style.color, '#123456');
+    assert.equal(style.fontWeight, 700);
+    assert.equal(style.baseWidth, undefined);
+    assert.equal(style.offsetY, undefined);
+});
+
+test('puede restaurar la ausencia total de override', () => {
+    const state = presentation.createPresentationState();
+
+    assert.equal(presentation.getRoleOverride(state, 'coverEditorial', 'promotionText'), null);
+    presentation.updateRoleStyle(state, 'coverEditorial', 'promotionText', { offsetX: 9 });
+    presentation.replaceRoleOverride(state, 'coverEditorial', 'promotionText', null);
+
+    assert.equal(
+        presentation.resolveRoleStyle(state, 'coverEditorial', 'promotionText').offsetX,
+        undefined,
+    );
+});

@@ -567,12 +567,43 @@
         return resolveRoleStyle(state, templateId, role);
     };
 
+    const getRoleOverride = (state, templateId, role) => {
+        assertTemplateAndRole(templateId, role);
+
+        const override = state.templateRoleOverrides?.[templateId]?.[role];
+
+        return override ? deepClone(override) : null;
+    };
+
+    const replaceRoleOverride = (state, templateId, role, override) => {
+        assertTemplateAndRole(templateId, role);
+
+        if (override === null) {
+            return resetRoleStyle(state, templateId, role);
+        }
+
+        const allowed = ROLE_DEFINITIONS[role].properties;
+        const invalidProperty = Object.keys(override).find((property) => !allowed.includes(property));
+
+        if (invalidProperty) {
+            throw new Error(`Propiedad no permitida para ${role}: ${invalidProperty}`);
+        }
+
+        validateStylePatch(state, templateId, role, override);
+        state.templateRoleOverrides[templateId] ??= {};
+        state.templateRoleOverrides[templateId][role] = deepClone(override);
+
+        return resolveRoleStyle(state, templateId, role);
+    };
+
     return Object.freeze({
         createPresentationState,
         resolveDefaultRoleStyle,
         resolveRoleStyle,
         updateRoleStyle,
         resetRoleStyle,
+        getRoleOverride,
+        replaceRoleOverride,
         getRoleDefinition: (role) => deepClone(ROLE_DEFINITIONS[role] ?? null),
         getTheme: (state) => deepClone(state?.theme ?? THEME),
         listRoles: () => Object.keys(ROLE_DEFINITIONS),
