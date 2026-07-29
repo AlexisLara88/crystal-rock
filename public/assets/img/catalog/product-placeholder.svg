@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-labelledby="title description">
+  <title id="title">Imagen genérica de producto</title>
+  <desc id="description">Marcador visual neutro para un producto sin fotografía disponible.</desc>
+  <rect width="800" height="800" rx="72" fill="#f5ecde"/>
+  <rect x="92" y="92" width="616" height="616" rx="54" fill="#fcf9f3" stroke="#8c9b85" stroke-width="8" stroke-dasharray="22 18"/>
+  <circle cx="400" cy="322" r="86" fill="#dce2d8"/>
+  <path d="M238 568c28-104 91-158 162-158s134 54 162 158" fill="#dce2d8"/>
+  <path d="M286 622h228" stroke="#702d45" stroke-width="16" stroke-linecap="round"/>
+  <text x="400" y="678" fill="#586a5b" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" text-anchor="middle">IMAGEN PENDIENTE</text>
+</svg>
