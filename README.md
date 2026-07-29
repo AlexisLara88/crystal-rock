@@ -23,15 +23,18 @@ La fase visual D1 incluye una muestra navegable con datos fijos:
 - contrato de presentación versionado y prueba técnica mPDF A4.
 - descarga de las siete hojas que el editor está mostrando, con los ajustes actuales de texto e imagen.
 
-El primer incremento de D2 agrega:
+Los incrementos operativos de D2 agregan:
 
 - carga local de archivos `.xlsx` y `.csv` de hasta 5 MB;
 - detección de hoja, encabezados y aliases de columnas;
 - conservación de códigos como texto y precios con su formato visible;
 - validación inicial de obligatorios, precios, categorías y códigos repetidos;
-- resumen de importación y revisión por fila antes de componer.
+- resumen de importación y revisión por fila antes de componer;
+- carga de un ZIP o hasta 20 imágenes JPG, PNG y WebP;
+- asociación por nombre o ruta declarada en `@Image`;
+- miniaturas y detección de imágenes faltantes, duplicadas, sobrantes, inválidas o de baja resolución.
 
-Esta primera revisión no reemplaza todavía los datos de las plantillas ni resuelve los archivos indicados en `@Image`. Esos pasos continúan en D2 antes de entrar a la composición automática de D3.
+Esta revisión todavía no reemplaza los datos de las plantillas ni implementa las decisiones de cargar un reemplazo, excluir el producto o usar una imagen genérica. Esos pasos cierran D2 antes de entrar a la composición automática de D3.
 
 La descarga visible genera una copia gráfica A4 fiel al estado de la sesión; la ruta mPDF permanece como prueba técnica interna hasta que EV8 conecte el modelo normalizado y los productos importados.
 
@@ -62,10 +65,11 @@ Rutas disponibles:
 /
 /demo/catalogo
 /demo/catalogo/importar
+/demo/catalogo/imagenes
 /demo/catalogo/pdf-prueba
 ```
 
-La ruta `importar` recibe solicitudes `POST` con protección CSRF y un campo de archivo llamado `catalogFile`.
+Las rutas `importar` e `imagenes` reciben solicitudes `POST` con protección CSRF. La segunda procesa los archivos solo para la revisión actual y no los conserva como biblioteca persistente.
 
 ## Verificaciones
 

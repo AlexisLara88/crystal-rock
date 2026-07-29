@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Muestra visual del generador automático de catálogos Crystal Rock">
     <title>Crystal Rock · Estudio de catálogo</title>
-    <link rel="stylesheet" href="<?= base_url('assets/css/catalog-demo.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/catalog-demo.css?v=' . filemtime(FCPATH . 'assets/css/catalog-demo.css')) ?>">
 </head>
 <body>
 <div id="catalog-app" class="studio-shell" v-cloak>
@@ -20,7 +20,7 @@
 
         <div class="studio-status">
             <span class="status-dot"></span>
-            Demo visual · D1
+            Demo funcional · D2
         </div>
 
         <div class="header-actions">
@@ -725,6 +725,79 @@
                     <p v-for="warning in importResult.globalWarnings" :key="warning">{{ warning }}</p>
                 </div>
 
+                <section class="image-import-section">
+                    <div class="image-import-heading">
+                        <div>
+                            <span class="eyebrow">2 · Vincular imágenes</span>
+                            <h3>Relacionar cada archivo con @Image</h3>
+                            <p>Elegí un ZIP o varias imágenes JPG, PNG o WebP. La coincidencia se realiza por nombre.</p>
+                        </div>
+                        <span v-if="imageResult" class="image-review-badge">
+                            {{ imageResult.summary.matchedRows }}/{{ importResult.summary.totalRows }} vinculadas
+                        </span>
+                    </div>
+
+                    <form class="image-import-form" @submit.prevent="matchCatalogImages">
+                        <label class="image-import-picker">
+                            <input
+                                ref="catalogImagesInput"
+                                type="file"
+                                accept=".zip,.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                multiple
+                                @change="selectCatalogImages"
+                            >
+                            <span class="import-file-icon">▧</span>
+                            <strong>{{ selectedImageFilesLabel }}</strong>
+                            <small>ZIP hasta 25 MB · o hasta 20 imágenes de 12 MB cada una</small>
+                        </label>
+                        <button
+                            type="submit"
+                            class="import-submit image-match-submit"
+                            :disabled="!selectedImageFiles.length || imageMatching"
+                        >
+                            {{ imageMatching ? 'Revisando imágenes…' : 'Vincular imágenes' }}
+                        </button>
+                    </form>
+
+                    <p v-if="imageError" class="image-import-error" role="alert">{{ imageError }}</p>
+
+                    <div v-if="imageResult" class="image-match-summary">
+                        <div>
+                            <span>Archivos útiles</span>
+                            <strong>{{ imageResult.summary.usableFiles }}</strong>
+                        </div>
+                        <div class="summary-success">
+                            <span>Vinculadas</span>
+                            <strong>{{ imageResult.summary.matchedRows }}</strong>
+                        </div>
+                        <div :class="{ 'summary-error': imageResult.summary.missingRows > 0 }">
+                            <span>Faltantes</span>
+                            <strong>{{ imageResult.summary.missingRows }}</strong>
+                        </div>
+                        <div :class="{ 'summary-error': imageResult.summary.duplicateRows > 0 }">
+                            <span>Duplicadas</span>
+                            <strong>{{ imageResult.summary.duplicateRows }}</strong>
+                        </div>
+                        <div :class="{ 'summary-warning': imageResult.summary.unusedFiles > 0 }">
+                            <span>Sobrantes</span>
+                            <strong>{{ imageResult.summary.unusedFiles }}</strong>
+                        </div>
+                    </div>
+
+                    <div
+                        v-if="imageResult && (imageResult.unusedFiles.length || imageResult.rejectedFiles.length)"
+                        class="image-file-notices"
+                    >
+                        <p v-if="imageResult.unusedFiles.length">
+                            <strong>Sin utilizar:</strong>
+                            {{ unusedImageLabels() }}
+                        </p>
+                        <p v-for="file in imageResult.rejectedFiles" :key="file.name + file.reason">
+                            <strong>{{ file.name }}:</strong> {{ file.reason }}
+                        </p>
+                    </div>
+                </section>
+
                 <div class="import-mapping">
                     <span class="eyebrow">Mapeo detectado</span>
                     <div>
@@ -747,6 +820,7 @@
                                 <th>Código</th>
                                 <th>Precio</th>
                                 <th>@Image</th>
+                                <th>Vista previa</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
@@ -756,12 +830,26 @@
                                 <td>{{ row.values.name || '—' }}</td>
                                 <td>{{ row.values.code || '—' }}</td>
                                 <td>{{ row.values.price || '—' }}</td>
-                                <td>{{ row.values.image || '—' }}</td>
                                 <td>
-                                    <span :class="['row-status', 'row-status-' + row.status]">
-                                        {{ importStatusLabel(row.status) }}
+                                    <strong class="image-reference">{{ row.values.image || '—' }}</strong>
+                                    <small v-if="imageMatchForRow(row)">
+                                        {{ imageMatchStatusLabel(imageMatchForRow(row).status) }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <img
+                                        v-if="imageMatchForRow(row)?.image"
+                                        class="import-image-preview"
+                                        :src="imageMatchForRow(row).image.preview"
+                                        :alt="'Vista previa de ' + row.values.name"
+                                    >
+                                    <span v-else class="import-image-placeholder">Sin imagen</span>
+                                </td>
+                                <td>
+                                    <span :class="['row-status', 'row-status-' + combinedImportStatus(row)]">
+                                        {{ importStatusLabel(combinedImportStatus(row)) }}
                                     </span>
-                                    <small v-if="row.errors.length || row.warnings.length">
+                                    <small>
                                         {{ importRowIssues(row) }}
                                     </small>
                                 </td>
@@ -782,6 +870,7 @@
 <script>
     window.CATALOG_ASSET_BASE = <?= json_encode(base_url('assets/img/catalog/'), JSON_UNESCAPED_SLASHES) ?>;
     window.CATALOG_IMPORT_URL = <?= json_encode(site_url('demo/catalogo/importar'), JSON_UNESCAPED_SLASHES) ?>;
+    window.CATALOG_IMAGES_URL = <?= json_encode(site_url('demo/catalogo/imagenes'), JSON_UNESCAPED_SLASHES) ?>;
     window.CATALOG_CSRF = {
         name: <?= json_encode(csrf_token()) ?>,
         hash: <?= json_encode(csrf_hash()) ?>,
@@ -790,8 +879,8 @@
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://unpkg.com/jspdf@4.2.1/dist/jspdf.umd.min.js"></script>
-<script src="<?= base_url('assets/js/catalog-presentation.js') ?>"></script>
-<script src="<?= base_url('assets/js/catalog-pdf-export.js') ?>"></script>
-<script src="<?= base_url('assets/js/' . $pageScript) ?>"></script>
+<script src="<?= base_url('assets/js/catalog-presentation.js?v=' . filemtime(FCPATH . 'assets/js/catalog-presentation.js')) ?>"></script>
+<script src="<?= base_url('assets/js/catalog-pdf-export.js?v=' . filemtime(FCPATH . 'assets/js/catalog-pdf-export.js')) ?>"></script>
+<script src="<?= base_url('assets/js/' . $pageScript . '?v=' . filemtime(FCPATH . 'assets/js/' . $pageScript)) ?>"></script>
 </body>
 </html>

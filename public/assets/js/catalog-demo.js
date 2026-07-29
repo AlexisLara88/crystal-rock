@@ -36,6 +36,11 @@
                 importedFilename: '',
                 importResult: null,
                 importError: '',
+                selectedImageFiles: [],
+                imageMatching: false,
+                imageResult: null,
+                imageError: '',
+                imageMatchesByRow: {},
                 floatingEditorPosition: {
                     top: 96,
                     left: 12,
@@ -107,6 +112,13 @@
                 if (!this.pdfExportProgress) return 'Preparando PDF…';
 
                 return `Generando ${this.pdfExportProgress} / ${this.pages.length}`;
+            },
+            selectedImageFilesLabel() {
+                const count = this.selectedImageFiles.length;
+                if (count === 0) return 'Elegir ZIP o imágenes';
+                if (count === 1) return this.selectedImageFiles[0].name;
+
+                return `${count} archivos seleccionados`;
             },
             activeImageAdjustment() {
                 if (!this.activeImageKey) return null;
@@ -223,7 +235,7 @@
                 this.importError = '';
             },
             closeImportPanel() {
-                if (this.importingCatalog) return;
+                if (this.importingCatalog || this.imageMatching) return;
 
                 this.importPanelOpen = false;
             },
@@ -234,6 +246,7 @@
                 this.importResult = null;
                 this.importedFilename = '';
                 this.importError = '';
+                this.resetImageImport();
             },
             async importCatalogFile() {
                 if (!this.selectedCatalogFile || this.importingCatalog) return;
@@ -273,6 +286,7 @@
 
                     this.importedFilename = payload.filename;
                     this.importResult = payload.result;
+                    this.resetImageImport();
                 } catch (error) {
                     console.error('No fue posible importar el catálogo.', error);
                     this.importError = error instanceof Error
@@ -281,6 +295,128 @@
                 } finally {
                     this.importingCatalog = false;
                 }
+            },
+            resetImageImport() {
+                this.selectedImageFiles = [];
+                this.imageResult = null;
+                this.imageError = '';
+                this.imageMatchesByRow = {};
+
+                if (this.$refs.catalogImagesInput) {
+                    this.$refs.catalogImagesInput.value = '';
+                }
+            },
+            selectCatalogImages(event) {
+                this.selectedImageFiles = [...(event.target.files ?? [])];
+                this.imageResult = null;
+                this.imageError = '';
+                this.imageMatchesByRow = {};
+            },
+            async matchCatalogImages() {
+                if (!this.importResult || !this.selectedImageFiles.length || this.imageMatching) return;
+
+                const extensions = this.selectedImageFiles.map(file => file.name.split('.').pop()?.toLowerCase());
+                const allowedExtensions = ['zip', 'jpg', 'jpeg', 'png', 'webp'];
+                if (extensions.some(extension => !allowedExtensions.includes(extension))) {
+                    this.imageError = 'Usá un ZIP o imágenes JPG, PNG y WebP.';
+                    return;
+                }
+                if (extensions.filter(extension => extension === 'zip').length > 1) {
+                    this.imageError = 'Seleccioná como máximo un archivo ZIP.';
+                    return;
+                }
+                if (extensions.filter(extension => extension !== 'zip').length > 20) {
+                    this.imageError = 'Para cargar más de 20 imágenes, reunilas en un archivo ZIP.';
+                    return;
+                }
+                if (this.selectedImageFiles.some((file, index) => (
+                    extensions[index] === 'zip'
+                        ? file.size > 25 * 1024 * 1024
+                        : file.size > 12 * 1024 * 1024
+                ))) {
+                    this.imageError = 'Uno de los archivos supera el límite permitido.';
+                    return;
+                }
+                if (this.selectedImageFiles.reduce((total, file) => total + file.size, 0) > 35 * 1024 * 1024) {
+                    this.imageError = 'La selección supera el límite total de 35 MB. Usá un ZIP más pequeño.';
+                    return;
+                }
+
+                this.imageMatching = true;
+                this.imageError = '';
+                const formData = new FormData();
+                const references = this.importResult.rows.map(row => ({
+                    sourceRow: row.sourceRow,
+                    image: row.values.image ?? '',
+                }));
+
+                formData.append('imageReferences', JSON.stringify(references));
+                formData.append(window.CATALOG_CSRF.name, window.CATALOG_CSRF.hash);
+
+                this.selectedImageFiles.forEach((file, index) => {
+                    formData.append(
+                        extensions[index] === 'zip' ? 'imageBundle' : 'imageFiles[]',
+                        file,
+                    );
+                });
+
+                try {
+                    const response = await fetch(window.CATALOG_IMAGES_URL, {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                        },
+                    });
+                    const payload = await response.json().catch(() => null);
+
+                    if (payload?.csrfHash) window.CATALOG_CSRF.hash = payload.csrfHash;
+                    if (!response.ok || !payload?.ok) {
+                        throw new Error(payload?.message || 'No fue posible revisar las imágenes.');
+                    }
+
+                    this.imageResult = payload.result;
+                    this.imageMatchesByRow = Object.fromEntries(
+                        payload.result.rows.map(row => [String(row.sourceRow), row]),
+                    );
+                } catch (error) {
+                    console.error('No fue posible vincular las imágenes.', error);
+                    this.imageError = error instanceof Error
+                        ? error.message
+                        : 'No fue posible revisar las imágenes.';
+                } finally {
+                    this.imageMatching = false;
+                }
+            },
+            imageMatchForRow(row) {
+                return this.imageMatchesByRow[String(row.sourceRow)] ?? null;
+            },
+            imageMatchStatusLabel(status) {
+                return {
+                    matched: 'Archivo vinculado',
+                    warning: 'Vinculada con advertencia',
+                    missing: 'Archivo faltante',
+                    duplicate: 'Coincidencia duplicada',
+                }[status] ?? status;
+            },
+            combinedImportStatus(row) {
+                const imageMatch = this.imageMatchForRow(row);
+
+                if (row.status === 'error' || ['missing', 'duplicate'].includes(imageMatch?.status)) {
+                    return 'error';
+                }
+                if (!imageMatch) {
+                    return 'pending';
+                }
+                if (row.status === 'warning' || imageMatch.status === 'warning') {
+                    return 'warning';
+                }
+
+                return 'valid';
+            },
+            unusedImageLabels() {
+                return this.imageResult?.unusedFiles.map(file => file.name).join(', ') ?? '';
             },
             importFieldLabel(field) {
                 return {
@@ -302,10 +438,20 @@
                     valid: 'Correcto',
                     warning: 'Revisar',
                     error: 'Bloqueado',
+                    pending: 'Falta revisar imágenes',
                 }[status] ?? status;
             },
             importRowIssues(row) {
-                return [...row.errors, ...row.warnings].join(' · ');
+                const imageMatch = this.imageMatchForRow(row);
+                const issues = [...row.errors, ...row.warnings];
+
+                if (!imageMatch) {
+                    issues.push('Imagen pendiente de revisión.');
+                } else {
+                    issues.push(...imageMatch.errors, ...imageMatch.warnings);
+                }
+
+                return issues.join(' · ');
             },
             async exportCurrentPdf() {
                 if (this.pdfExporting) return;
