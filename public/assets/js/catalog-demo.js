@@ -3,6 +3,7 @@
     const presentationEngine = window.CatalogPresentation;
     const pdfExportEngine = window.CatalogPdfExport;
     const importReviewEngine = window.CatalogImportReview;
+    const catalogComposer = window.CatalogComposer;
 
     createApp({
         data() {
@@ -50,6 +51,9 @@
                 newCategoryName: '',
                 bulkCategory: '',
                 approvedCatalogModel: null,
+                composedCatalogModel: null,
+                catalogMode: 'sample',
+                compositionNotice: '',
                 floatingEditorPosition: {
                     top: 96,
                     left: 12,
@@ -64,6 +68,7 @@
                     { id: 'back', type: 'back', label: 'Contraportada', description: 'Canales comerciales y comunidad' },
                 ],
                 featuredProduct: {
+                    name: 'Copas Gin Tonic 590 ML',
                     code: '6676159',
                     price: '$2,526.72',
                     specs: [
@@ -109,6 +114,13 @@
         computed: {
             visiblePages() {
                 return this.showAll ? this.pages : [this.pages[this.currentPage]];
+            },
+            catalogSourceSummary() {
+                if (this.catalogMode !== 'imported' || !this.composedCatalogModel) {
+                    return 'Muestra visual';
+                }
+
+                return `${this.composedCatalogModel.products.length} productos · ${this.composedCatalogModel.categories.length} categorías · ${this.pages.length} páginas`;
             },
             canUndo() {
                 return this.historyPast.length > 0 || this.editorSnapshot() !== this.historyCurrent;
@@ -751,13 +763,32 @@
             confirmImportedCatalog() {
                 if (!this.importReadiness.canConfirm) return;
 
-                this.approvedCatalogModel = importReviewEngine.buildApprovedModel({
+                const model = importReviewEngine.buildApprovedModel({
                     rows: this.importResult.rows,
                     editsByRow: this.importEditsByRow,
                     excludedRows: this.excludedImportRows,
                     imageMatchesByRow: this.imageMatchesByRow,
                     categories: this.catalogCategories,
                 });
+                const pages = catalogComposer.composeCatalog(model);
+
+                this.approvedCatalogModel = model;
+                this.composedCatalogModel = model;
+                this.pages = pages;
+                this.catalogMode = 'imported';
+                this.currentPage = 0;
+                this.showAll = true;
+                this.compositionNotice = `Catálogo generado con ${model.products.length} productos en ${pages.length} páginas.`;
+                this.imageAdjustments = {};
+                this.historyPast = [];
+                this.historyFuture = [];
+                this.historyCurrent = this.editorSnapshot();
+                this.closeImportPanel();
+                this.$nextTick(() => this.waitForExportAssets().catch((error) => {
+                    this.pdfExportError = error instanceof Error
+                        ? error.message
+                        : 'No fue posible preparar las imágenes del catálogo.';
+                }));
             },
             async exportCurrentPdf() {
                 if (this.pdfExporting) return;
@@ -983,6 +1014,32 @@
             },
             gridTemplateId(count) {
                 return `grid${count}`;
+            },
+            featuredForPage(page) {
+                return page.product ?? this.featuredProduct;
+            },
+            gridProductsForPage(page) {
+                return page.products ?? this.products.slice(0, page.count);
+            },
+            productImageSource(product, fallback = '') {
+                const source = product?.imageSource || product?.image;
+
+                if (typeof source === 'string' && (
+                    source.startsWith('data:')
+                    || source.startsWith('blob:')
+                    || source.startsWith('http://')
+                    || source.startsWith('https://')
+                    || source.startsWith('/')
+                )) {
+                    return source;
+                }
+
+                return this.asset(source || fallback);
+            },
+            productImageKey(page, product, prefix = 'product') {
+                const identity = product?.editorKey || product?.sourceRow || product?.code || 'unknown';
+
+                return `${page.id}-${prefix}-${identity}`;
             },
             isTextSelected(templateId, role) {
                 return this.activeTextSelection?.templateId === templateId

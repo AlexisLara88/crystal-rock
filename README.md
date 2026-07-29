@@ -41,9 +41,17 @@ Los incrementos operativos de D2 agregan:
 - validación dinámica de obligatorios y códigos repetidos;
 - confirmación de un modelo normalizado listo para la composición.
 
-Esta revisión todavía no reemplaza los datos de las plantillas. El modelo confirmado queda preparado para el siguiente incremento de D3, que construirá y paginará el catálogo automáticamente.
+El primer incremento de D3 conecta ese modelo con las plantillas:
 
-La descarga visible genera una copia gráfica A4 fiel al estado de la sesión; la ruta mPDF permanece como prueba técnica interna hasta que EV8 conecte el modelo normalizado y los productos importados.
+- genera portada y contraportada;
+- crea una apertura y un destacado por categoría;
+- excluye el destacado de la grilla secundaria;
+- distribuye los productos restantes en páginas de uno a cuatro elementos;
+- coloca los datos y las imágenes importadas en el editor;
+- conserva controles de encuadre independientes por producto;
+- actualiza navegación, conteo de páginas y descarga PDF.
+
+La descarga visible genera una copia gráfica A4 fiel al catálogo compuesto durante la sesión. La ruta mPDF permanece como prueba técnica interna para una salida estructurada posterior.
 
 ## Stack
 
@@ -90,9 +98,10 @@ El paquete permite probar el ciclo de carga, asociación, revisión y confirmaci
 /opt/lampp/bin/php vendor/bin/phpunit
 /opt/lampp/bin/php -l app/Views/catalog_demo.php
 node --check public/assets/js/catalog-demo.js
+node --check public/assets/js/catalog-composer.js
 node --check public/assets/js/catalog-pdf-export.js
 node --check public/assets/js/catalog-presentation.js
-node --test tests/js/catalog-presentation.test.js tests/js/catalog-pdf-export.test.js tests/js/catalog-import-review.test.js
+node --test tests/js/catalog-composer.test.js tests/js/catalog-presentation.test.js tests/js/catalog-pdf-export.test.js tests/js/catalog-import-review.test.js
 composer audit --locked
 ```
 

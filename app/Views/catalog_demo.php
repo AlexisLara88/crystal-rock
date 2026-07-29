@@ -56,7 +56,7 @@
         <aside class="studio-sidebar">
             <div class="sidebar-intro">
                 <span class="eyebrow">Sistema visual</span>
-                <h1>Una identidad, siete composiciones.</h1>
+                <h1>Una identidad, {{ pages.length }} composiciones.</h1>
                 <p>La estructura decide cómo acomodar el contenido; el usuario solo elige y corrige datos.</p>
             </div>
 
@@ -89,6 +89,7 @@
                 <div>
                     <span class="eyebrow">Vista previa A4</span>
                     <strong>{{ showAll ? pages.length + ' páginas' : pages[currentPage].label }}</strong>
+                    <small class="catalog-source-summary">{{ catalogSourceSummary }}</small>
                 </div>
 
                 <div class="preview-controls">
@@ -96,6 +97,12 @@
                     <span>{{ currentPage + 1 }} / {{ pages.length }}</span>
                     <button type="button" @click="nextPage" :disabled="showAll || currentPage === pages.length - 1" aria-label="Página siguiente">→</button>
                 </div>
+            </div>
+
+            <div v-if="compositionNotice" class="composition-notice" role="status">
+                <span>✓</span>
+                <strong>{{ compositionNotice }}</strong>
+                <button type="button" aria-label="Cerrar aviso" @click="compositionNotice = ''">×</button>
             </div>
 
             <div :class="['preview-scroll', { 'all-pages': showAll }]">
@@ -131,7 +138,7 @@
                                 :class="textSelectionClass(coverTemplateId(), 'date')"
                                 :style="textStyle(coverTemplateId(), 'date')"
                                 @pointerdown="selectText(coverTemplateId(), 'date', $event)"
-                            >ACTUALIZADO: 28/07/26</div>
+                            >{{ page.updatedLabel || 'ACTUALIZADO: 28/07/26' }}</div>
                             <div class="cover-line line-one"></div>
                             <div class="cover-line line-two"></div>
                             <div class="cover-title">
@@ -145,12 +152,12 @@
                                     :class="textSelectionClass(coverTemplateId(), 'coverTitle')"
                                     :style="textStyle(coverTemplateId(), 'coverTitle')"
                                     @pointerdown="selectText(coverTemplateId(), 'coverTitle', $event)"
-                                >Cristalería</h2>
+                                >{{ page.title || 'Cristalería' }}</h2>
                                 <p
                                     :class="textSelectionClass(coverTemplateId(), 'coverSubtitle')"
                                     :style="textStyle(coverTemplateId(), 'coverSubtitle')"
                                     @pointerdown="selectText(coverTemplateId(), 'coverSubtitle', $event)"
-                                >Calidad real para casas reales</p>
+                                >{{ page.subtitle || 'Calidad real para casas reales' }}</p>
                             </div>
                         </template>
 
@@ -163,7 +170,7 @@
                                         :class="textSelectionClass('featured', 'category')"
                                         :style="textStyle('featured', 'category')"
                                         @pointerdown="selectText('featured', 'category', $event)"
-                                    >CRISTALERÍA</div>
+                                    >{{ (page.category || 'CRISTALERÍA').toLocaleUpperCase('es') }}</div>
                                     <div
                                         class="featured-label"
                                         :class="textSelectionClass('featured', 'featuredLabel')"
@@ -177,20 +184,20 @@
                                         :class="textSelectionClass('featured', 'productName')"
                                         :style="textStyle('featured', 'productName')"
                                         @pointerdown="selectText('featured', 'productName', $event)"
-                                    >Copas Gin<br>Tonic 590 ML</div>
+                                    >{{ featuredForPage(page).name || 'Copas Gin Tonic 590 ML' }}</div>
                                     <div class="featured-cutout-slot">
                                         <div
-                                            :class="['featured-cutout', 'image-mask', { active: activeImageKey === 'featured-' + featuredProduct.code }]"
-                                            :style="maskStyle('featured-' + featuredProduct.code)"
-                                            @pointerdown="startImageDrag('featured-' + featuredProduct.code, 'Copas Gin Tonic 590 ML', $event)"
+                                            :class="['featured-cutout', 'image-mask', { active: activeImageKey === productImageKey(page, featuredForPage(page), 'featured') }]"
+                                            :style="maskStyle(productImageKey(page, featuredForPage(page), 'featured'))"
+                                            @pointerdown="startImageDrag(productImageKey(page, featuredForPage(page), 'featured'), featuredForPage(page).name, $event)"
                                             @pointermove="dragImage"
                                             @pointerup="endImageDrag"
                                             @pointercancel="endImageDrag"
                                         >
                                             <img
-                                                :src="asset('glass-gin.png')"
-                                                alt="Copa Gin Tonic"
-                                                :style="imageStyle('featured-' + featuredProduct.code)"
+                                                :src="productImageSource(featuredForPage(page), 'glass-gin.png')"
+                                                :alt="featuredForPage(page).name"
+                                                :style="imageStyle(productImageKey(page, featuredForPage(page), 'featured'))"
                                                 draggable="false"
                                             >
                                         </div>
@@ -201,7 +208,7 @@
                                         :style="textStyle('featured', 'productSpecs')"
                                         @pointerdown="selectText('featured', 'productSpecs', $event)"
                                     >
-                                        <template v-for="spec in featuredProduct.specs" :key="spec[0]">
+                                        <template v-for="spec in featuredForPage(page).specs" :key="spec[0]">
                                             <dt>{{ spec[0] }}</dt>
                                             <dd>{{ spec[1] }}</dd>
                                         </template>
@@ -212,13 +219,13 @@
                                             :class="textSelectionClass('featured', 'productCode')"
                                             :style="textStyle('featured', 'productCode')"
                                             @pointerdown="selectText('featured', 'productCode', $event)"
-                                        ><b>Cod.</b> {{ featuredProduct.code }}</div>
+                                        ><b>Cod.</b> {{ featuredForPage(page).code }}</div>
                                         <div
                                             class="featured-price"
                                             :class="textSelectionClass('featured', 'productPrice')"
                                             :style="textStyle('featured', 'productPrice')"
                                             @pointerdown="selectText('featured', 'productPrice', $event)"
-                                        >Ud. {{ featuredProduct.price }}</div>
+                                        >Ud. {{ featuredForPage(page).price }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -241,8 +248,8 @@
                         <template v-else-if="page.type === 'grid'">
                             <div :class="['product-grid', 'product-grid-' + page.count]">
                                 <section
-                                    v-for="product in products.slice(0, page.count)"
-                                    :key="page.id + product.code"
+                                    v-for="product in gridProductsForPage(page)"
+                                    :key="productImageKey(page, product)"
                                     class="product-card"
                                 >
                                     <div class="product-copy">
@@ -282,17 +289,17 @@
                                     </div>
                                     <div class="product-image-slot">
                                         <div
-                                            :class="['product-image', 'image-mask', { active: activeImageKey === product.code }]"
-                                            :style="maskStyle(product.code)"
-                                            @pointerdown="startImageDrag(product.code, product.name, $event)"
+                                            :class="['product-image', 'image-mask', { active: activeImageKey === productImageKey(page, product) }]"
+                                            :style="maskStyle(productImageKey(page, product))"
+                                            @pointerdown="startImageDrag(productImageKey(page, product), product.name, $event)"
                                             @pointermove="dragImage"
                                             @pointerup="endImageDrag"
                                             @pointercancel="endImageDrag"
                                         >
                                             <img
-                                                :src="asset(product.image)"
+                                                :src="productImageSource(product)"
                                                 :alt="product.name"
-                                                :style="imageStyle(product.code)"
+                                                :style="imageStyle(productImageKey(page, product))"
                                                 draggable="false"
                                             >
                                         </div>
@@ -1052,7 +1059,7 @@
                     <div class="catalog-confirm-action">
                         <div>
                             <strong v-if="approvedCatalogModel">
-                                Modelo confirmado: {{ approvedCatalogModel.products.length }} productos en
+                                Catálogo listo: {{ approvedCatalogModel.products.length }} productos en
                                 {{ approvedCatalogModel.categories.length }} categorías.
                             </strong>
                             <span v-else-if="importReadiness.canConfirm">
@@ -1067,13 +1074,13 @@
                             :disabled="!importReadiness.canConfirm"
                             @click="confirmImportedCatalog"
                         >
-                            {{ approvedCatalogModel ? 'Modelo confirmado' : 'Confirmar para composición' }}
+                            {{ approvedCatalogModel ? 'Regenerar catálogo' : 'Generar catálogo' }}
                         </button>
                     </div>
                 </section>
 
                 <footer class="import-dialog-footer">
-                    <span>Vista previa temporal · Los datos todavía no alimentan las plantillas.</span>
+                    <span>Los datos confirmados se convertirán en páginas editables y descargables.</span>
                     <button type="button" class="ghost-button" @click="closeImportPanel">Cerrar revisión</button>
                 </footer>
             </template>
@@ -1097,6 +1104,7 @@
 <script src="<?= base_url('assets/js/catalog-presentation.js?v=' . filemtime(FCPATH . 'assets/js/catalog-presentation.js')) ?>"></script>
 <script src="<?= base_url('assets/js/catalog-pdf-export.js?v=' . filemtime(FCPATH . 'assets/js/catalog-pdf-export.js')) ?>"></script>
 <script src="<?= base_url('assets/js/catalog-import-review.js?v=' . filemtime(FCPATH . 'assets/js/catalog-import-review.js')) ?>"></script>
+<script src="<?= base_url('assets/js/catalog-composer.js?v=' . filemtime(FCPATH . 'assets/js/catalog-composer.js')) ?>"></script>
 <script src="<?= base_url('assets/js/' . $pageScript . '?v=' . filemtime(FCPATH . 'assets/js/' . $pageScript)) ?>"></script>
 </body>
 </html>
