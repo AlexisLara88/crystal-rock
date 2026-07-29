@@ -604,7 +604,7 @@
                     }
 
                     this.updateSelectedText(previous);
-                    this.layoutWarning = 'Movimiento bloqueado: el elemento alcanzó el límite de su zona o tocaría otro bloque.';
+                    this.layoutWarning = 'Movimiento bloqueado: el elemento alcanzó el límite de su zona.';
                 });
             },
             selectedLayoutIsValid() {
