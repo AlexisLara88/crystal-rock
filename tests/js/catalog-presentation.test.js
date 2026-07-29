@@ -237,3 +237,16 @@ test('puede restaurar la ausencia total de override', () => {
         undefined,
     );
 });
+
+test('restablece todos los roles de una variante sin afectar las demás', () => {
+    const state = presentation.createPresentationState();
+
+    presentation.updateRoleStyle(state, 'grid4', 'productName', { color: '#112233' });
+    presentation.updateRoleStyle(state, 'grid4', 'productPrice', { fontWeight: 300 });
+    presentation.updateRoleStyle(state, 'grid3', 'productName', { color: '#445566' });
+    presentation.resetTemplateStyles(state, 'grid4');
+
+    assert.equal(presentation.resolveRoleStyle(state, 'grid4', 'productName').color, '#702d45');
+    assert.equal(presentation.resolveRoleStyle(state, 'grid4', 'productPrice').fontWeight, 800);
+    assert.equal(presentation.resolveRoleStyle(state, 'grid3', 'productName').color, '#445566');
+});

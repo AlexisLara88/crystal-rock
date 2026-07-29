@@ -391,6 +391,10 @@
                 <strong>{{ activeImageAdjustment.label }}</strong>
             </div>
         </div>
+        <div class="history-controls" aria-label="Historial de edición">
+            <button type="button" :disabled="!canUndo" @click="undoEditorChange" title="Ctrl/Cmd + Z">↶ Deshacer</button>
+            <button type="button" :disabled="!canRedo" @click="redoEditorChange" title="Ctrl/Cmd + Shift + Z">Rehacer ↷</button>
+        </div>
         <p>Arrastrá la imagen dentro de la máscara o usá los controles.</p>
 
         <label class="zoom-control">
@@ -454,6 +458,10 @@
                 <span class="image-editor-kicker">Elemento de texto</span>
                 <strong>{{ activeTextInspector.label }}</strong>
             </div>
+        </div>
+        <div class="history-controls" aria-label="Historial de edición">
+            <button type="button" :disabled="!canUndo" @click="undoEditorChange" title="Ctrl/Cmd + Z">↶ Deshacer</button>
+            <button type="button" :disabled="!canRedo" @click="redoEditorChange" title="Ctrl/Cmd + Shift + Z">Rehacer ↷</button>
         </div>
 
         <div class="text-style-controls">
@@ -605,10 +613,24 @@
         </div>
 
         <p v-if="layoutWarning" class="layout-warning" role="alert">{{ layoutWarning }}</p>
+        <p
+            v-for="warning in textWarnings"
+            :key="warning"
+            class="layout-warning quality-warning"
+            role="status"
+        >{{ warning }}</p>
 
-        <button type="button" class="text-reset-button" @click="resetSelectedText">
-            Restablecer elemento
-        </button>
+        <div class="text-reset-actions">
+            <button type="button" class="text-reset-button element-reset" @click="resetSelectedText">
+                Restablecer elemento
+            </button>
+            <button type="button" class="text-reset-button" @click="resetSelectedVariant">
+                Restablecer variante
+            </button>
+            <button type="button" class="text-reset-button theme-reset" @click="resetPresentationTheme">
+                Restablecer tema
+            </button>
+        </div>
         <small>La selección y este panel no aparecen en el PDF.</small>
     </aside>
 </div>

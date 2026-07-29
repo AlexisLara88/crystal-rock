@@ -4,8 +4,11 @@
 
     createApp({
         data() {
+            const presentationState = presentationEngine.createPresentationState();
+            const imageAdjustments = {};
+
             return {
-                presentationState: presentationEngine.createPresentationState(),
+                presentationState,
                 currentPage: 0,
                 showAll: false,
                 coverVariant: 'editorial',
@@ -15,9 +18,14 @@
                 textDragState: null,
                 textBaseDimensions: {},
                 layoutWarning: '',
-                imageAdjustments: {},
+                textWarnings: [],
+                imageAdjustments,
                 dragState: null,
                 panelDragState: null,
+                historyPast: [],
+                historyFuture: [],
+                historyCurrent: JSON.stringify({ presentationState, imageAdjustments }),
+                historyTimer: null,
                 floatingEditorPosition: {
                     top: 96,
                     left: 12,
@@ -77,6 +85,12 @@
         computed: {
             visiblePages() {
                 return this.showAll ? this.pages : [this.pages[this.currentPage]];
+            },
+            canUndo() {
+                return this.historyPast.length > 0 || this.editorSnapshot() !== this.historyCurrent;
+            },
+            canRedo() {
+                return this.historyFuture.length > 0;
             },
             activeImageAdjustment() {
                 if (!this.activeImageKey) return null;
@@ -162,6 +176,7 @@
             document.addEventListener('pointerup', this.endFloatingEditorDrag);
             document.addEventListener('pointercancel', this.endTextDrag);
             document.addEventListener('pointercancel', this.endFloatingEditorDrag);
+            document.addEventListener('keydown', this.handleHistoryShortcut);
             window.addEventListener('resize', this.constrainFloatingEditor);
             this.dockFloatingEditor();
         },
@@ -173,7 +188,9 @@
             document.removeEventListener('pointerup', this.endFloatingEditorDrag);
             document.removeEventListener('pointercancel', this.endTextDrag);
             document.removeEventListener('pointercancel', this.endFloatingEditorDrag);
+            document.removeEventListener('keydown', this.handleHistoryShortcut);
             window.removeEventListener('resize', this.constrainFloatingEditor);
+            if (this.historyTimer) window.clearTimeout(this.historyTimer);
         },
         watch: {
             coverVariant() {
@@ -183,6 +200,103 @@
         methods: {
             asset(file) {
                 return `${window.CATALOG_ASSET_BASE}${file}`;
+            },
+            editorSnapshot() {
+                const meaningfulImageAdjustments = Object.fromEntries(
+                    Object.entries(this.imageAdjustments)
+                        .filter(([, adjustment]) => !this.isDefaultImageAdjustment(adjustment)),
+                );
+
+                return JSON.stringify({
+                    presentationState: this.presentationState,
+                    imageAdjustments: meaningfulImageAdjustments,
+                });
+            },
+            isDefaultImageAdjustment(adjustment) {
+                return adjustment.zoom === 1
+                    && adjustment.x === 0
+                    && adjustment.y === 0
+                    && adjustment.maskSize === 0.9
+                    && adjustment.rotation === 0;
+            },
+            queueEditorHistory() {
+                if (this.historyTimer) window.clearTimeout(this.historyTimer);
+
+                this.historyTimer = window.setTimeout(() => {
+                    this.historyTimer = null;
+                    this.commitEditorHistory();
+                }, 220);
+            },
+            commitEditorHistory() {
+                const nextSnapshot = this.editorSnapshot();
+
+                if (nextSnapshot === this.historyCurrent) return;
+
+                this.historyPast.push(this.historyCurrent);
+                if (this.historyPast.length > 50) this.historyPast.shift();
+                this.historyCurrent = nextSnapshot;
+                this.historyFuture = [];
+            },
+            flushEditorHistory() {
+                if (!this.historyTimer) return;
+
+                window.clearTimeout(this.historyTimer);
+                this.historyTimer = null;
+                this.commitEditorHistory();
+            },
+            restoreEditorSnapshot(snapshot) {
+                const restored = JSON.parse(snapshot);
+                const activeImageLabel = this.activeImageAdjustment?.label ?? 'Imagen de producto';
+
+                this.presentationState = restored.presentationState;
+                this.imageAdjustments = restored.imageAdjustments;
+                if (this.activeImageKey && !this.imageAdjustments[this.activeImageKey]) {
+                    this.ensureImageAdjustment(this.activeImageKey, activeImageLabel);
+                }
+                this.textBaseDimensions = {};
+                this.layoutWarning = '';
+                this.$nextTick(() => this.refreshTextWarnings());
+            },
+            undoEditorChange() {
+                this.flushEditorHistory();
+                if (!this.historyPast.length) return;
+
+                this.historyFuture.push(this.historyCurrent);
+                this.historyCurrent = this.historyPast.pop();
+                this.restoreEditorSnapshot(this.historyCurrent);
+            },
+            redoEditorChange() {
+                this.flushEditorHistory();
+                if (!this.historyFuture.length) return;
+
+                this.historyPast.push(this.historyCurrent);
+                this.historyCurrent = this.historyFuture.pop();
+                this.restoreEditorSnapshot(this.historyCurrent);
+            },
+            handleHistoryShortcut(event) {
+                if (!(event.ctrlKey || event.metaKey)) return;
+                const target = event.target;
+                const isTypingField = target instanceof HTMLElement && (
+                    target.matches('textarea, [contenteditable="true"]')
+                    || (
+                        target instanceof HTMLInputElement
+                        && !['range', 'color', 'button'].includes(target.type)
+                    )
+                );
+
+                if (isTypingField) {
+                    return;
+                }
+
+                const key = event.key.toLowerCase();
+
+                if (key === 'z' && !event.shiftKey) {
+                    event.preventDefault();
+                    this.undoEditorChange();
+                } else if (key === 'y' || (key === 'z' && event.shiftKey)) {
+                    event.preventDefault();
+                    this.redoEditorChange();
+                }
             },
             textStyle(templateId, role) {
                 const resolved = presentationEngine.resolveRoleStyle(this.presentationState, templateId, role);
@@ -248,6 +362,7 @@
                 this.captureSelectedTextDimensions(event.currentTarget);
                 this.prepareFloatingEditor();
                 this.startTextDrag(event);
+                this.$nextTick(() => this.refreshTextWarnings());
             },
             selectPage(index) {
                 this.deselectAll();
@@ -337,22 +452,26 @@
 
                 event.currentTarget.releasePointerCapture?.(event.pointerId);
                 this.dragState = null;
+                this.queueEditorHistory();
             },
             setImageZoom(event) {
                 if (!this.activeImageAdjustment) return;
 
                 this.activeImageAdjustment.zoom = this.clamp(Number(event.target.value), 0.7, 2.4);
+                this.queueEditorHistory();
             },
             setMaskSize(event) {
                 if (!this.activeImageAdjustment) return;
 
                 this.activeImageAdjustment.maskSize = this.clamp(Number(event.target.value), 0.6, 1);
+                this.queueEditorHistory();
             },
             nudgeImage(deltaX, deltaY) {
                 if (!this.activeImageAdjustment) return;
 
                 this.activeImageAdjustment.x = this.clamp(this.activeImageAdjustment.x + deltaX, -50, 50);
                 this.activeImageAdjustment.y = this.clamp(this.activeImageAdjustment.y + deltaY, -50, 50);
+                this.queueEditorHistory();
             },
             rotateImage(degrees) {
                 if (!this.activeImageAdjustment) return;
@@ -363,15 +482,18 @@
                 if (rotation < -180) rotation += 360;
 
                 this.activeImageAdjustment.rotation = rotation;
+                this.queueEditorHistory();
             },
             resetImageAdjustment() {
                 if (!this.activeImageAdjustment) return;
 
+                this.flushEditorHistory();
                 this.activeImageAdjustment.zoom = 1;
                 this.activeImageAdjustment.x = 0;
                 this.activeImageAdjustment.y = 0;
                 this.activeImageAdjustment.maskSize = 0.9;
                 this.activeImageAdjustment.rotation = 0;
+                this.queueEditorHistory();
             },
             dockFloatingEditor() {
                 const viewportPadding = 12;
@@ -471,6 +593,7 @@
                 this.selectedTextElement = null;
                 this.textDragState = null;
                 this.layoutWarning = '';
+                this.textWarnings = [];
             },
             deselectAll() {
                 this.deselectImage();
@@ -481,6 +604,7 @@
 
                 const dimensionKey = this.selectedTextDimensionKey();
 
+                this.flushEditorHistory();
                 presentationEngine.resetRoleStyle(
                     this.presentationState,
                     this.activeTextSelection.templateId,
@@ -488,6 +612,33 @@
                 );
                 delete this.textBaseDimensions[dimensionKey];
                 this.layoutWarning = '';
+                this.queueEditorHistory();
+                this.$nextTick(() => this.refreshTextWarnings());
+            },
+            resetSelectedVariant() {
+                if (!this.activeTextSelection) return;
+                if (!window.confirm('¿Restablecer todos los ajustes de esta variante?')) return;
+
+                const { templateId } = this.activeTextSelection;
+
+                this.flushEditorHistory();
+                presentationEngine.resetTemplateStyles(this.presentationState, templateId);
+                for (const key of Object.keys(this.textBaseDimensions)) {
+                    if (key.startsWith(`${templateId}:`)) delete this.textBaseDimensions[key];
+                }
+                this.layoutWarning = '';
+                this.queueEditorHistory();
+                this.$nextTick(() => this.refreshTextWarnings());
+            },
+            resetPresentationTheme() {
+                if (!window.confirm('¿Restablecer el tema y todas las variantes?')) return;
+
+                this.flushEditorHistory();
+                this.presentationState = presentationEngine.createPresentationState();
+                this.textBaseDimensions = {};
+                this.layoutWarning = '';
+                this.queueEditorHistory();
+                this.$nextTick(() => this.refreshTextWarnings());
             },
             updateSelectedText(patch) {
                 if (!this.activeTextSelection) return;
@@ -498,6 +649,8 @@
                     this.activeTextSelection.role,
                     patch,
                 );
+                this.queueEditorHistory();
+                this.$nextTick(() => this.refreshTextWarnings());
             },
             selectedTextDimensionKey() {
                 if (!this.activeTextSelection) return '';
@@ -613,6 +766,7 @@
                         previousOverride,
                     );
                     this.layoutWarning = 'Movimiento bloqueado: el elemento alcanzó el límite de su zona.';
+                    this.$nextTick(() => this.refreshTextWarnings());
                 });
             },
             selectedLayoutIsValid() {
@@ -653,6 +807,119 @@
                     && first.right > second.left + gap
                     && first.top < second.bottom - gap
                     && first.bottom > second.top + gap;
+            },
+            refreshTextWarnings() {
+                if (!this.activeTextSelection) {
+                    this.textWarnings = [];
+                    return;
+                }
+
+                const elements = [...document.querySelectorAll('.editable-text.active-text')];
+                const warnings = [];
+                const hasOverflow = elements.some((element) => (
+                    element.clientWidth > 0
+                    && element.clientHeight > 0
+                    && (
+                        element.scrollWidth > element.clientWidth + 1
+                        || element.scrollHeight > element.clientHeight + 1
+                    )
+                ));
+
+                if (hasOverflow) warnings.push('El texto excede el espacio disponible.');
+
+                const hasLowContrast = elements.some((element) => {
+                    const foreground = this.parseCssColor(getComputedStyle(element).color);
+                    const background = this.resolveElementBackground(element);
+
+                    if (!foreground || !background) return false;
+
+                    const fontSize = Number.parseFloat(getComputedStyle(element).fontSize);
+                    const fontWeight = Number.parseInt(getComputedStyle(element).fontWeight, 10);
+                    const threshold = fontSize >= 24 || (fontSize >= 19 && fontWeight >= 700) ? 3 : 4.5;
+
+                    return this.contrastRatio(foreground, background) < threshold;
+                });
+
+                if (hasLowContrast) warnings.push('El contraste entre texto y fondo es bajo.');
+
+                this.textWarnings = warnings;
+            },
+            resolveElementBackground(element) {
+                let composite = { r: 0, g: 0, b: 0, a: 0 };
+                let current = element;
+
+                while (current instanceof HTMLElement) {
+                    const style = getComputedStyle(current);
+
+                    if (style.backgroundImage !== 'none' && composite.a < 0.99) return null;
+
+                    const layer = this.parseCssColor(style.backgroundColor);
+                    if (layer && layer.a > 0) composite = this.compositeColors(composite, layer);
+                    if (composite.a >= 0.99) return composite;
+                    if (current.classList.contains('catalog-sheet')) break;
+
+                    current = current.parentElement;
+                }
+
+                return null;
+            },
+            parseCssColor(value) {
+                if (typeof value !== 'string') return null;
+
+                const rgb = value.match(
+                    /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,/]\s*([\d.]+))?\s*\)$/i,
+                );
+
+                if (!rgb) return null;
+
+                return {
+                    r: Number(rgb[1]),
+                    g: Number(rgb[2]),
+                    b: Number(rgb[3]),
+                    a: rgb[4] === undefined ? 1 : Number(rgb[4]),
+                };
+            },
+            compositeColors(foreground, background) {
+                const alpha = foreground.a + background.a * (1 - foreground.a);
+
+                if (alpha === 0) return { r: 0, g: 0, b: 0, a: 0 };
+
+                return {
+                    r: (
+                        foreground.r * foreground.a
+                        + background.r * background.a * (1 - foreground.a)
+                    ) / alpha,
+                    g: (
+                        foreground.g * foreground.a
+                        + background.g * background.a * (1 - foreground.a)
+                    ) / alpha,
+                    b: (
+                        foreground.b * foreground.a
+                        + background.b * background.a * (1 - foreground.a)
+                    ) / alpha,
+                    a: alpha,
+                };
+            },
+            contrastRatio(first, second) {
+                const luminance = (color) => {
+                    const channels = [color.r, color.g, color.b].map((channel) => {
+                        const normalized = channel / 255;
+
+                        return normalized <= 0.03928
+                            ? normalized / 12.92
+                            : ((normalized + 0.055) / 1.055) ** 2.4;
+                    });
+
+                    return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+                };
+                const firstLuminance = luminance(first);
+                const secondLuminance = luminance(second);
+
+                return (
+                    Math.max(firstLuminance, secondLuminance) + 0.05
+                ) / (
+                    Math.min(firstLuminance, secondLuminance) + 0.05
+                );
             },
             setSelectedFont(event) {
                 this.updateSelectedText({ fontFamily: `font:${event.target.value}` });

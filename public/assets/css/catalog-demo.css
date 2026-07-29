@@ -313,6 +313,33 @@ button {
     margin-bottom: 5px;
 }
 
+.history-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-bottom: 13px;
+}
+
+.history-controls button {
+    min-height: 36px;
+    border: 1px solid rgba(88, 106, 91, .28);
+    border-radius: 9px;
+    color: var(--sage-dark);
+    background: #fff;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.history-controls button:hover:not(:disabled) {
+    border-color: var(--sage-dark);
+    background: #eef1ea;
+}
+
+.history-controls button:disabled {
+    cursor: not-allowed;
+    opacity: .42;
+}
+
 .editable-text {
     cursor: grab;
     touch-action: none;
@@ -351,6 +378,21 @@ button {
 .text-reset-button:hover {
     border-color: var(--sage-dark);
     background: #eef1ea;
+}
+
+.text-reset-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+}
+
+.text-reset-actions .element-reset {
+    grid-column: 1 / -1;
+}
+
+.text-reset-actions .theme-reset {
+    border-color: rgba(112, 45, 69, .35);
+    color: var(--red);
 }
 
 .text-style-controls {
@@ -501,6 +543,12 @@ button {
     font-size: 10px;
     font-weight: 700;
     line-height: 1.35;
+}
+
+.quality-warning {
+    border-color: rgba(140, 155, 133, .55);
+    color: var(--ink);
+    background: rgba(245, 236, 222, .78);
 }
 
 .inspector-row {

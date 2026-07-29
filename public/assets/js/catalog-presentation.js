@@ -596,6 +596,21 @@
         return resolveRoleStyle(state, templateId, role);
     };
 
+    const resetTemplateStyles = (state, templateId) => {
+        if (!TEMPLATE_STYLES[templateId]) {
+            throw new Error(`Plantilla desconocida: ${templateId}`);
+        }
+
+        delete state.templateRoleOverrides[templateId];
+
+        return Object.fromEntries(
+            TEMPLATE_ROLES[templateId].map((role) => [
+                role,
+                resolveRoleStyle(state, templateId, role),
+            ]),
+        );
+    };
+
     return Object.freeze({
         createPresentationState,
         resolveDefaultRoleStyle,
@@ -604,6 +619,7 @@
         resetRoleStyle,
         getRoleOverride,
         replaceRoleOverride,
+        resetTemplateStyles,
         getRoleDefinition: (role) => deepClone(ROLE_DEFINITIONS[role] ?? null),
         getTheme: (state) => deepClone(state?.theme ?? THEME),
         listRoles: () => Object.keys(ROLE_DEFINITIONS),
