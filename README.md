@@ -32,9 +32,10 @@ Los incrementos operativos de D2 agregan:
 - resumen de importación y revisión por fila antes de componer;
 - carga de un ZIP o hasta 20 imágenes JPG, PNG y WebP;
 - asociación por nombre o ruta declarada en `@Image`;
-- miniaturas y detección de imágenes faltantes, duplicadas, sobrantes, inválidas o de baja resolución.
+- miniaturas y detección de imágenes faltantes, duplicadas, sobrantes, inválidas o de baja resolución;
+- resolución por fila mediante reemplazo manual, imagen genérica o exclusión reversible del producto.
 
-Esta revisión todavía no reemplaza los datos de las plantillas ni implementa las decisiones de cargar un reemplazo, excluir el producto o usar una imagen genérica. Esos pasos cierran D2 antes de entrar a la composición automática de D3.
+Esta revisión todavía no reemplaza los datos de las plantillas. Falta resolver la edición de datos y categorías y construir el modelo aprobado que alimentará la composición automática de D3.
 
 La descarga visible genera una copia gráfica A4 fiel al estado de la sesión; la ruta mPDF permanece como prueba técnica interna hasta que EV8 conecte el modelo normalizado y los productos importados.
 

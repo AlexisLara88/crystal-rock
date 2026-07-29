@@ -41,6 +41,8 @@
                 imageResult: null,
                 imageError: '',
                 imageMatchesByRow: {},
+                excludedImportRows: {},
+                imageReplacementRow: null,
                 floatingEditorPosition: {
                     top: 96,
                     left: 12,
@@ -119,6 +121,21 @@
                 if (count === 1) return this.selectedImageFiles[0].name;
 
                 return `${count} archivos seleccionados`;
+            },
+            imageReviewSummary() {
+                const rows = this.importResult?.rows ?? [];
+                const activeRows = rows.filter(row => !this.isRowExcluded(row));
+                const statuses = activeRows.map(row => this.imageMatchForRow(row)?.status ?? 'pending');
+                const accepted = ['matched', 'warning', 'replacement', 'generic'];
+
+                return {
+                    activeRows: activeRows.length,
+                    resolvedRows: statuses.filter(status => accepted.includes(status)).length,
+                    warningRows: statuses.filter(status => ['warning', 'replacement', 'generic'].includes(status)).length,
+                    missingRows: statuses.filter(status => ['missing', 'pending'].includes(status)).length,
+                    duplicateRows: statuses.filter(status => status === 'duplicate').length,
+                    excludedRows: rows.length - activeRows.length,
+                };
             },
             activeImageAdjustment() {
                 if (!this.activeImageKey) return null;
@@ -235,7 +252,7 @@
                 this.importError = '';
             },
             closeImportPanel() {
-                if (this.importingCatalog || this.imageMatching) return;
+                if (this.importingCatalog || this.imageMatching || this.imageReplacementRow !== null) return;
 
                 this.importPanelOpen = false;
             },
@@ -301,6 +318,8 @@
                 this.imageResult = null;
                 this.imageError = '';
                 this.imageMatchesByRow = {};
+                this.excludedImportRows = {};
+                this.imageReplacementRow = null;
 
                 if (this.$refs.catalogImagesInput) {
                     this.$refs.catalogImagesInput.value = '';
@@ -398,9 +417,119 @@
                     warning: 'Vinculada con advertencia',
                     missing: 'Archivo faltante',
                     duplicate: 'Coincidencia duplicada',
+                    replacement: 'Reemplazo manual',
+                    generic: 'Imagen genérica',
                 }[status] ?? status;
             },
+            isRowExcluded(row) {
+                return Boolean(this.excludedImportRows[String(row.sourceRow)]);
+            },
+            toggleImportRowExclusion(row) {
+                const key = String(row.sourceRow);
+                const next = { ...this.excludedImportRows };
+
+                if (next[key]) {
+                    delete next[key];
+                } else {
+                    next[key] = true;
+                }
+
+                this.excludedImportRows = next;
+            },
+            useGenericImage(row) {
+                const key = String(row.sourceRow);
+                this.imageMatchesByRow = {
+                    ...this.imageMatchesByRow,
+                    [key]: {
+                        sourceRow: row.sourceRow,
+                        reference: row.values.image ?? '',
+                        status: 'generic',
+                        image: {
+                            name: 'Imagen genérica',
+                            mime: 'image/svg+xml',
+                            width: 800,
+                            height: 800,
+                            size: 0,
+                            lowResolution: false,
+                            preview: window.CATALOG_GENERIC_IMAGE,
+                        },
+                        candidates: [],
+                        warnings: ['Se utilizará una imagen genérica en lugar del archivo declarado.'],
+                        errors: [],
+                    },
+                };
+            },
+            async replaceImageForRow(row, event) {
+                const [file] = event.target.files ?? [];
+                event.target.value = '';
+
+                if (!file || this.imageReplacementRow !== null) return;
+
+                const extension = file.name.split('.').pop()?.toLowerCase();
+                if (!['jpg', 'jpeg', 'png', 'webp'].includes(extension)) {
+                    this.imageError = 'El reemplazo debe ser una imagen JPG, PNG o WebP.';
+                    return;
+                }
+                if (file.size > 12 * 1024 * 1024) {
+                    this.imageError = 'La imagen de reemplazo supera el límite de 12 MB.';
+                    return;
+                }
+
+                this.imageReplacementRow = row.sourceRow;
+                this.imageError = '';
+                const formData = new FormData();
+
+                formData.append('imageReferences', JSON.stringify([{
+                    sourceRow: row.sourceRow,
+                    image: file.name,
+                }]));
+                formData.append('imageFiles[]', file);
+                formData.append(window.CATALOG_CSRF.name, window.CATALOG_CSRF.hash);
+
+                try {
+                    const response = await fetch(window.CATALOG_IMAGES_URL, {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                        },
+                    });
+                    const payload = await response.json().catch(() => null);
+
+                    if (payload?.csrfHash) window.CATALOG_CSRF.hash = payload.csrfHash;
+                    if (!response.ok || !payload?.ok || !payload.result?.rows?.[0]?.image) {
+                        throw new Error(payload?.message || 'No fue posible usar la imagen seleccionada.');
+                    }
+
+                    const match = payload.result.rows[0];
+                    const originalReference = row.values.image || 'sin referencia';
+                    this.imageMatchesByRow = {
+                        ...this.imageMatchesByRow,
+                        [String(row.sourceRow)]: {
+                            ...match,
+                            reference: originalReference,
+                            status: 'replacement',
+                            warnings: [
+                                ...match.warnings,
+                                `Se reemplazará ${originalReference} por ${match.image.name}.`,
+                            ],
+                        },
+                    };
+                } catch (error) {
+                    console.error('No fue posible reemplazar la imagen.', error);
+                    this.imageError = error instanceof Error
+                        ? error.message
+                        : 'No fue posible usar la imagen seleccionada.';
+                } finally {
+                    this.imageReplacementRow = null;
+                }
+            },
             combinedImportStatus(row) {
+                if (this.isRowExcluded(row)) {
+                    return 'excluded';
+                }
+
                 const imageMatch = this.imageMatchForRow(row);
 
                 if (row.status === 'error' || ['missing', 'duplicate'].includes(imageMatch?.status)) {
@@ -409,7 +538,10 @@
                 if (!imageMatch) {
                     return 'pending';
                 }
-                if (row.status === 'warning' || imageMatch.status === 'warning') {
+                if (
+                    row.status === 'warning'
+                    || ['warning', 'replacement', 'generic'].includes(imageMatch.status)
+                ) {
                     return 'warning';
                 }
 
@@ -439,9 +571,14 @@
                     warning: 'Revisar',
                     error: 'Bloqueado',
                     pending: 'Falta revisar imágenes',
+                    excluded: 'Excluido',
                 }[status] ?? status;
             },
             importRowIssues(row) {
+                if (this.isRowExcluded(row)) {
+                    return 'Producto excluido temporalmente de la composición.';
+                }
+
                 const imageMatch = this.imageMatchForRow(row);
                 const issues = [...row.errors, ...row.warnings];
 

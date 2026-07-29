@@ -515,7 +515,7 @@ button {
 
 .image-match-summary {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 8px;
     margin-top: 14px;
 }
@@ -650,6 +650,10 @@ button {
     min-width: 245px;
 }
 
+.import-table td:nth-child(8) {
+    min-width: 170px;
+}
+
 .import-table td small {
     display: block;
     margin-top: 6px;
@@ -686,6 +690,61 @@ button {
 .row-status-pending {
     color: #5f6461;
     background: #ecefed;
+}
+
+.row-status-excluded {
+    color: #67615a;
+    background: #e8e3dc;
+}
+
+.import-row-excluded td:not(:last-child) {
+    opacity: .48;
+}
+
+.import-row-actions {
+    display: grid;
+    gap: 6px;
+}
+
+.import-row-actions button,
+.row-file-action {
+    display: flex;
+    min-height: 30px;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 9px;
+    border: 1px solid rgba(88, 106, 91, .3);
+    border-radius: 8px;
+    color: var(--sage-dark);
+    background: #fff;
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.row-file-action {
+    position: relative;
+    cursor: pointer;
+}
+
+.row-file-action input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+}
+
+.import-row-actions button:disabled,
+.row-file-action.disabled {
+    cursor: wait;
+    opacity: .45;
+}
+
+.import-row-actions .exclude-row-action {
+    border-color: rgba(112, 45, 69, .25);
+    color: var(--red);
 }
 
 .image-reference {

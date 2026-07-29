@@ -733,7 +733,7 @@
                             <p>Elegí un ZIP o varias imágenes JPG, PNG o WebP. La coincidencia se realiza por nombre.</p>
                         </div>
                         <span v-if="imageResult" class="image-review-badge">
-                            {{ imageResult.summary.matchedRows }}/{{ importResult.summary.totalRows }} vinculadas
+                            {{ imageReviewSummary.resolvedRows }}/{{ imageReviewSummary.activeRows }} resueltas
                         </span>
                     </div>
 
@@ -767,20 +767,24 @@
                             <strong>{{ imageResult.summary.usableFiles }}</strong>
                         </div>
                         <div class="summary-success">
-                            <span>Vinculadas</span>
-                            <strong>{{ imageResult.summary.matchedRows }}</strong>
+                            <span>Resueltas</span>
+                            <strong>{{ imageReviewSummary.resolvedRows }}</strong>
                         </div>
-                        <div :class="{ 'summary-error': imageResult.summary.missingRows > 0 }">
+                        <div :class="{ 'summary-error': imageReviewSummary.missingRows > 0 }">
                             <span>Faltantes</span>
-                            <strong>{{ imageResult.summary.missingRows }}</strong>
+                            <strong>{{ imageReviewSummary.missingRows }}</strong>
                         </div>
-                        <div :class="{ 'summary-error': imageResult.summary.duplicateRows > 0 }">
+                        <div :class="{ 'summary-error': imageReviewSummary.duplicateRows > 0 }">
                             <span>Duplicadas</span>
-                            <strong>{{ imageResult.summary.duplicateRows }}</strong>
+                            <strong>{{ imageReviewSummary.duplicateRows }}</strong>
                         </div>
                         <div :class="{ 'summary-warning': imageResult.summary.unusedFiles > 0 }">
                             <span>Sobrantes</span>
                             <strong>{{ imageResult.summary.unusedFiles }}</strong>
+                        </div>
+                        <div :class="{ 'summary-warning': imageReviewSummary.excludedRows > 0 }">
+                            <span>Excluidos</span>
+                            <strong>{{ imageReviewSummary.excludedRows }}</strong>
                         </div>
                     </div>
 
@@ -822,10 +826,15 @@
                                 <th>@Image</th>
                                 <th>Vista previa</th>
                                 <th>Estado</th>
+                                <th>Resolver</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="row in importResult.rows" :key="row.sourceRow">
+                            <tr
+                                v-for="row in importResult.rows"
+                                :key="row.sourceRow"
+                                :class="{ 'import-row-excluded': isRowExcluded(row) }"
+                            >
                                 <td>{{ row.sourceRow }}</td>
                                 <td>{{ row.values.name || '—' }}</td>
                                 <td>{{ row.values.code || '—' }}</td>
@@ -853,6 +862,46 @@
                                         {{ importRowIssues(row) }}
                                     </small>
                                 </td>
+                                <td>
+                                    <div class="import-row-actions">
+                                        <button
+                                            v-if="isRowExcluded(row)"
+                                            type="button"
+                                            @click="toggleImportRowExclusion(row)"
+                                        >
+                                            Reincorporar
+                                        </button>
+                                        <template v-else>
+                                            <label
+                                                class="row-file-action"
+                                                :class="{ disabled: imageReplacementRow !== null }"
+                                            >
+                                                <input
+                                                    type="file"
+                                                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                                    :disabled="imageReplacementRow !== null"
+                                                    @change="replaceImageForRow(row, $event)"
+                                                >
+                                                {{ imageReplacementRow === row.sourceRow ? 'Cargando…' : 'Cargar reemplazo' }}
+                                            </label>
+                                            <button
+                                                type="button"
+                                                :disabled="imageReplacementRow !== null"
+                                                @click="useGenericImage(row)"
+                                            >
+                                                Usar genérica
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="exclude-row-action"
+                                                :disabled="imageReplacementRow !== null"
+                                                @click="toggleImportRowExclusion(row)"
+                                            >
+                                                Excluir
+                                            </button>
+                                        </template>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -869,6 +918,7 @@
 
 <script>
     window.CATALOG_ASSET_BASE = <?= json_encode(base_url('assets/img/catalog/'), JSON_UNESCAPED_SLASHES) ?>;
+    window.CATALOG_GENERIC_IMAGE = <?= json_encode(base_url('assets/img/catalog/product-placeholder.svg?v=' . filemtime(FCPATH . 'assets/img/catalog/product-placeholder.svg')), JSON_UNESCAPED_SLASHES) ?>;
     window.CATALOG_IMPORT_URL = <?= json_encode(site_url('demo/catalogo/importar'), JSON_UNESCAPED_SLASHES) ?>;
     window.CATALOG_IMAGES_URL = <?= json_encode(site_url('demo/catalogo/imagenes'), JSON_UNESCAPED_SLASHES) ?>;
     window.CATALOG_CSRF = {
