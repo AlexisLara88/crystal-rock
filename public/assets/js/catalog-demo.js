@@ -1,9 +1,11 @@
 (() => {
     const { createApp } = Vue;
+    const presentationEngine = window.CatalogPresentation;
 
     createApp({
         data() {
             return {
+                presentationState: presentationEngine.createPresentationState(),
                 currentPage: 0,
                 showAll: false,
                 coverVariant: 'editorial',
@@ -91,6 +93,21 @@
         methods: {
             asset(file) {
                 return `${window.CATALOG_ASSET_BASE}${file}`;
+            },
+            textStyle(templateId, role) {
+                return presentationEngine.resolveRoleStyle(this.presentationState, templateId, role);
+            },
+            coverTemplateId() {
+                const variants = {
+                    editorial: 'coverEditorial',
+                    promotional: 'coverPromotional',
+                    minimal: 'coverMinimal',
+                };
+
+                return variants[this.coverVariant];
+            },
+            gridTemplateId(count) {
+                return `grid${count}`;
             },
             selectPage(index) {
                 this.currentPage = index;

@@ -96,16 +96,16 @@
                             <div class="cover-shade"></div>
                             <div class="cover-promo">
                                 <small v-if="coverVariant === 'promotional'">¡Nuevo!</small>
-                                <span>Hacé tu compra por<br>la <b>web</b> y obtené un</span>
-                                <strong>10% OFF</strong>
+                                <span :style="textStyle(coverTemplateId(), 'promotionText')">Hacé tu compra por<br>la <b>web</b> y obtené un</span>
+                                <strong :style="textStyle(coverTemplateId(), 'promotionValue')">10% OFF</strong>
                             </div>
-                            <div class="date-pill">ACTUALIZADO: 28/07/26</div>
+                            <div class="date-pill" :style="textStyle(coverTemplateId(), 'date')">ACTUALIZADO: 28/07/26</div>
                             <div class="cover-line line-one"></div>
                             <div class="cover-line line-two"></div>
                             <div class="cover-title">
-                                <span class="catalog-wordmark">CRYSTALROCK</span>
-                                <h2>Cristalería</h2>
-                                <p>Calidad real para casas reales</p>
+                                <span class="catalog-wordmark" :style="textStyle(coverTemplateId(), 'wordmark')">CRYSTALROCK</span>
+                                <h2 :style="textStyle(coverTemplateId(), 'coverTitle')">Cristalería</h2>
+                                <p :style="textStyle(coverTemplateId(), 'coverSubtitle')">Calidad real para casas reales</p>
                             </div>
                         </template>
 
@@ -113,11 +113,11 @@
                             <div class="featured-shell">
                                 <div class="featured-hero">
                                     <img :src="asset('feature-wine.jpg')" alt="">
-                                    <div class="category-ribbon">CRISTALERÍA</div>
-                                    <div class="featured-label">Producto<br>destacado</div>
+                                    <div class="category-ribbon" :style="textStyle('featured', 'category')">CRISTALERÍA</div>
+                                    <div class="featured-label" :style="textStyle('featured', 'featuredLabel')">Producto<br>destacado</div>
                                 </div>
                                 <div class="featured-product">
-                                    <div class="featured-name">Copas Gin<br>Tonic 590 ML</div>
+                                    <div class="featured-name" :style="textStyle('featured', 'productName')">Copas Gin<br>Tonic 590 ML</div>
                                     <div class="featured-cutout-slot">
                                         <div
                                             :class="['featured-cutout', 'image-mask', { active: activeImageKey === 'featured-' + featuredProduct.code }]"
@@ -135,22 +135,22 @@
                                             >
                                         </div>
                                     </div>
-                                    <dl class="product-specs featured-specs">
+                                    <dl class="product-specs featured-specs" :style="textStyle('featured', 'productSpecs')">
                                         <template v-for="spec in featuredProduct.specs" :key="spec[0]">
                                             <dt>{{ spec[0] }}</dt>
                                             <dd>{{ spec[1] }}</dd>
                                         </template>
                                     </dl>
                                     <div class="featured-commerce">
-                                        <div class="featured-code"><b>Cod.</b> {{ featuredProduct.code }}</div>
-                                        <div class="featured-price">Ud. {{ featuredProduct.price }}</div>
+                                        <div class="featured-code" :style="textStyle('featured', 'productCode')"><b>Cod.</b> {{ featuredProduct.code }}</div>
+                                        <div class="featured-price" :style="textStyle('featured', 'productPrice')">Ud. {{ featuredProduct.price }}</div>
                                     </div>
                                 </div>
                             </div>
                             <footer class="sheet-footer light-footer">
-                                <span class="catalog-wordmark footer-wordmark">CRYSTALROCK</span>
+                                <span class="catalog-wordmark footer-wordmark" :style="textStyle('featured', 'footerWordmark')">CRYSTALROCK</span>
                                 <i></i>
-                                <span>PARA CASAS REALES</span>
+                                <span :style="textStyle('featured', 'footerTagline')">PARA CASAS REALES</span>
                             </footer>
                         </template>
 
@@ -162,17 +162,17 @@
                                     class="product-card"
                                 >
                                     <div class="product-copy">
-                                        <div class="product-title">{{ product.name }}</div>
+                                        <div class="product-title" :style="textStyle(gridTemplateId(page.count), 'productName')">{{ product.name }}</div>
                                         <div class="product-data">
-                                            <dl class="product-specs">
+                                            <dl class="product-specs" :style="textStyle(gridTemplateId(page.count), 'productSpecs')">
                                                 <template v-for="spec in product.specs" :key="spec[0]">
                                                     <dt>{{ spec[0] }}</dt>
                                                     <dd>{{ spec[1] }}</dd>
                                                 </template>
                                             </dl>
                                             <div class="product-commerce">
-                                                <div class="product-code"><b>Cod.</b> {{ product.code }}</div>
-                                                <div class="product-price">Ud. {{ product.price }}</div>
+                                                <div class="product-code" :style="textStyle(gridTemplateId(page.count), 'productCode')"><b>Cod.</b> {{ product.code }}</div>
+                                                <div class="product-price" :style="textStyle(gridTemplateId(page.count), 'productPrice')">Ud. {{ product.price }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -196,9 +196,9 @@
                                 </section>
                             </div>
                             <footer class="sheet-footer light-footer grid-footer">
-                                <span class="catalog-wordmark footer-wordmark">CRYSTALROCK</span>
+                                <span class="catalog-wordmark footer-wordmark" :style="textStyle(gridTemplateId(page.count), 'footerWordmark')">CRYSTALROCK</span>
                                 <i></i>
-                                <span>PARA CASAS REALES</span>
+                                <span :style="textStyle(gridTemplateId(page.count), 'footerTagline')">PARA CASAS REALES</span>
                             </footer>
                         </template>
 
@@ -206,19 +206,19 @@
                             <img class="sheet-background" :src="asset('back-community.png')" alt="">
                             <div class="back-shade"></div>
                             <div class="back-content">
-                                <span class="catalog-wordmark back-wordmark">CRYSTALROCK</span>
+                                <span class="catalog-wordmark back-wordmark" :style="textStyle('back', 'wordmark')">CRYSTALROCK</span>
                                 <div class="order-card">
-                                    <h2>¿Cómo hacer tu pedido?</h2>
+                                    <h2 :style="textStyle('back', 'backHeading')">¿Cómo hacer tu pedido?</h2>
                                     <hr>
-                                    <strong>Por nuestra web</strong>
-                                    <a href="https://www.crystalrock.com.ar">www.crystalrock.com.ar <span>↗</span></a>
-                                    <p>¡Obtenés un 10% OFF!</p>
-                                    <strong>Por WhatsApp</strong>
-                                    <a href="#">Atención personalizada <span>↗</span></a>
+                                    <strong :style="textStyle('back', 'backChannel')">Por nuestra web</strong>
+                                    <a href="https://www.crystalrock.com.ar" :style="textStyle('back', 'backLink')">www.crystalrock.com.ar <span>↗</span></a>
+                                    <p :style="textStyle('back', 'backNote')">¡Obtenés un 10% OFF!</p>
+                                    <strong :style="textStyle('back', 'backChannel')">Por WhatsApp</strong>
+                                    <a href="#" :style="textStyle('back', 'backLink')">Atención personalizada <span>↗</span></a>
                                 </div>
                                 <div class="community-cta">
-                                    <h3>¡Sumate a nuestra<br>comunidad en las redes!</h3>
-                                    <a href="#">Instagram</a>
+                                    <h3 :style="textStyle('back', 'communityHeading')">¡Sumate a nuestra<br>comunidad en las redes!</h3>
+                                    <a href="#" :style="textStyle('back', 'communityLink')">Instagram</a>
                                 </div>
                             </div>
                         </template>
@@ -289,6 +289,7 @@
     window.CATALOG_ASSET_BASE = <?= json_encode(base_url('assets/img/catalog/'), JSON_UNESCAPED_SLASHES) ?>;
 </script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="<?= base_url('assets/js/catalog-presentation.js') ?>"></script>
 <script src="<?= base_url('assets/js/' . $pageScript) ?>"></script>
 </body>
 </html>

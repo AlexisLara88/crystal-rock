@@ -11,6 +11,8 @@ La fase visual D1 incluye una muestra navegable con datos fijos:
 - grillas para uno, dos, tres y cuatro productos;
 - contraportada comercial;
 - previsualización A4 individual o de catálogo completo.
+- editor contextual de imágenes;
+- modelo de presentación separado por tema, plantilla y rol visual.
 
 La importación de Excel, validaciones y generación PDF pertenecen a las siguientes fases.
 
@@ -46,6 +48,8 @@ Rutas disponibles:
 /opt/lampp/bin/php vendor/bin/phpunit
 /opt/lampp/bin/php -l app/Views/catalog_demo.php
 node --check public/assets/js/catalog-demo.js
+node --check public/assets/js/catalog-presentation.js
+node tests/js/catalog-presentation.test.js
 composer audit --locked
 ```
 
