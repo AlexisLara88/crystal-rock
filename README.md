@@ -34,9 +34,13 @@ Los incrementos operativos de D2 agregan:
 - carga de un ZIP o hasta 20 imágenes JPG, PNG y WebP;
 - asociación por nombre o ruta declarada en `@Image`;
 - miniaturas y detección de imágenes faltantes, duplicadas, sobrantes, inválidas o de baja resolución;
-- resolución por fila mediante reemplazo manual, imagen genérica o exclusión reversible del producto.
+- resolución por fila mediante reemplazo manual, imagen genérica o exclusión reversible del producto;
+- edición de nombre, código y precio durante la sesión;
+- categorías sugeridas, creación de categorías y asignación masiva;
+- validación dinámica de obligatorios y códigos repetidos;
+- confirmación de un modelo normalizado listo para la composición.
 
-Esta revisión todavía no reemplaza los datos de las plantillas. Falta resolver la edición de datos y categorías y construir el modelo aprobado que alimentará la composición automática de D3.
+Esta revisión todavía no reemplaza los datos de las plantillas. El modelo confirmado queda preparado para el siguiente incremento de D3, que construirá y paginará el catálogo automáticamente.
 
 La descarga visible genera una copia gráfica A4 fiel al estado de la sesión; la ruta mPDF permanece como prueba técnica interna hasta que EV8 conecte el modelo normalizado y los productos importados.
 
@@ -81,7 +85,7 @@ Las rutas `importar` e `imagenes` reciben solicitudes `POST` con protección CSR
 node --check public/assets/js/catalog-demo.js
 node --check public/assets/js/catalog-pdf-export.js
 node --check public/assets/js/catalog-presentation.js
-node --test tests/js/catalog-presentation.test.js tests/js/catalog-pdf-export.test.js
+node --test tests/js/catalog-presentation.test.js tests/js/catalog-pdf-export.test.js tests/js/catalog-import-review.test.js
 composer audit --locked
 ```
 

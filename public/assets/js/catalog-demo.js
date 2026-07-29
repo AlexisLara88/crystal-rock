@@ -2,6 +2,7 @@
     const { createApp } = Vue;
     const presentationEngine = window.CatalogPresentation;
     const pdfExportEngine = window.CatalogPdfExport;
+    const importReviewEngine = window.CatalogImportReview;
 
     createApp({
         data() {
@@ -43,6 +44,12 @@
                 imageMatchesByRow: {},
                 excludedImportRows: {},
                 imageReplacementRow: null,
+                importEditsByRow: {},
+                catalogCategories: [],
+                selectedImportRows: {},
+                newCategoryName: '',
+                bulkCategory: '',
+                approvedCatalogModel: null,
                 floatingEditorPosition: {
                     top: 96,
                     left: 12,
@@ -136,6 +143,38 @@
                     duplicateRows: statuses.filter(status => status === 'duplicate').length,
                     excludedRows: rows.length - activeRows.length,
                 };
+            },
+            dataReview() {
+                return importReviewEngine.reviewRows({
+                    rows: this.importResult?.rows ?? [],
+                    editsByRow: this.importEditsByRow,
+                    excludedRows: this.excludedImportRows,
+                });
+            },
+            importReadiness() {
+                const rows = this.importResult?.rows ?? [];
+                const activeRows = rows.filter(row => !this.isRowExcluded(row));
+                const statuses = activeRows.map(row => this.combinedImportStatus(row));
+
+                return {
+                    activeRows: activeRows.length,
+                    readyRows: statuses.filter(status => ['valid', 'warning'].includes(status)).length,
+                    blockedRows: statuses.filter(status => ['error', 'pending'].includes(status)).length,
+                    warningRows: statuses.filter(status => status === 'warning').length,
+                    excludedRows: rows.length - activeRows.length,
+                    canConfirm: activeRows.length > 0
+                        && statuses.every(status => ['valid', 'warning'].includes(status)),
+                };
+            },
+            allActiveImportRowsSelected() {
+                const activeRows = (this.importResult?.rows ?? [])
+                    .filter(row => !this.isRowExcluded(row));
+
+                return activeRows.length > 0
+                    && activeRows.every(row => this.selectedImportRows[String(row.sourceRow)]);
+            },
+            selectedImportRowCount() {
+                return Object.values(this.selectedImportRows).filter(Boolean).length;
             },
             activeImageAdjustment() {
                 if (!this.activeImageKey) return null;
@@ -304,6 +343,7 @@
                     this.importedFilename = payload.filename;
                     this.importResult = payload.result;
                     this.resetImageImport();
+                    this.initializeImportEditing(payload.result.rows);
                 } catch (error) {
                     console.error('No fue posible importar el catálogo.', error);
                     this.importError = error instanceof Error
@@ -320,6 +360,7 @@
                 this.imageMatchesByRow = {};
                 this.excludedImportRows = {};
                 this.imageReplacementRow = null;
+                this.approvedCatalogModel = null;
 
                 if (this.$refs.catalogImagesInput) {
                     this.$refs.catalogImagesInput.value = '';
@@ -330,6 +371,7 @@
                 this.imageResult = null;
                 this.imageError = '';
                 this.imageMatchesByRow = {};
+                this.invalidateApprovedCatalog();
             },
             async matchCatalogImages() {
                 if (!this.importResult || !this.selectedImageFiles.length || this.imageMatching) return;
@@ -399,6 +441,7 @@
                     this.imageMatchesByRow = Object.fromEntries(
                         payload.result.rows.map(row => [String(row.sourceRow), row]),
                     );
+                    this.invalidateApprovedCatalog();
                 } catch (error) {
                     console.error('No fue posible vincular las imágenes.', error);
                     this.imageError = error instanceof Error
@@ -424,6 +467,95 @@
             isRowExcluded(row) {
                 return Boolean(this.excludedImportRows[String(row.sourceRow)]);
             },
+            initializeImportEditing(rows) {
+                const suggestedCategories = [
+                    'Copas y cristalería',
+                    'Sacacorchos y accesorios',
+                ];
+
+                this.catalogCategories = suggestedCategories;
+                this.bulkCategory = '';
+                this.newCategoryName = '';
+                this.selectedImportRows = {};
+                this.approvedCatalogModel = null;
+                this.importEditsByRow = Object.fromEntries(rows.map(row => {
+                    const name = row.values.name ?? '';
+                    const suggestedCategory = name.toLocaleLowerCase('es').includes('sacacorcho')
+                        ? suggestedCategories[1]
+                        : suggestedCategories[0];
+
+                    return [String(row.sourceRow), {
+                        name,
+                        code: row.values.code ?? '',
+                        price: row.values.price ?? '',
+                        category: row.values.category || suggestedCategory,
+                    }];
+                }));
+            },
+            addCatalogCategory() {
+                const name = this.newCategoryName.trim();
+                if (!name) return;
+
+                const existing = this.catalogCategories.find(category => (
+                    category.toLocaleLowerCase('es') === name.toLocaleLowerCase('es')
+                ));
+                if (!existing) this.catalogCategories = [...this.catalogCategories, name];
+
+                this.newCategoryName = '';
+                this.bulkCategory = existing || name;
+                this.invalidateApprovedCatalog();
+            },
+            toggleImportRowSelection(row) {
+                const key = String(row.sourceRow);
+                this.selectedImportRows = {
+                    ...this.selectedImportRows,
+                    [key]: !this.selectedImportRows[key],
+                };
+            },
+            toggleAllImportRows() {
+                const nextValue = !this.allActiveImportRowsSelected;
+                const selected = { ...this.selectedImportRows };
+
+                (this.importResult?.rows ?? []).forEach(row => {
+                    if (!this.isRowExcluded(row)) {
+                        selected[String(row.sourceRow)] = nextValue;
+                    }
+                });
+                this.selectedImportRows = selected;
+            },
+            applyBulkCategory() {
+                if (!this.bulkCategory) return;
+
+                const edits = { ...this.importEditsByRow };
+                Object.entries(this.selectedImportRows).forEach(([key, selected]) => {
+                    if (selected && edits[key] && !this.excludedImportRows[key]) {
+                        edits[key] = {
+                            ...edits[key],
+                            category: this.bulkCategory,
+                        };
+                    }
+                });
+
+                this.importEditsByRow = edits;
+                this.invalidateApprovedCatalog();
+            },
+            normalizeEditedPrice(row) {
+                const key = String(row.sourceRow);
+                const edit = this.importEditsByRow[key];
+                if (!edit) return;
+
+                this.importEditsByRow = {
+                    ...this.importEditsByRow,
+                    [key]: {
+                        ...edit,
+                        price: importReviewEngine.formatPrice(edit.price),
+                    },
+                };
+                this.invalidateApprovedCatalog();
+            },
+            invalidateApprovedCatalog() {
+                this.approvedCatalogModel = null;
+            },
             toggleImportRowExclusion(row) {
                 const key = String(row.sourceRow);
                 const next = { ...this.excludedImportRows };
@@ -435,6 +567,11 @@
                 }
 
                 this.excludedImportRows = next;
+                this.selectedImportRows = {
+                    ...this.selectedImportRows,
+                    [key]: false,
+                };
+                this.invalidateApprovedCatalog();
             },
             useGenericImage(row) {
                 const key = String(row.sourceRow);
@@ -458,6 +595,7 @@
                         errors: [],
                     },
                 };
+                this.invalidateApprovedCatalog();
             },
             async replaceImageForRow(row, event) {
                 const [file] = event.target.files ?? [];
@@ -516,6 +654,7 @@
                             ],
                         },
                     };
+                    this.invalidateApprovedCatalog();
                 } catch (error) {
                     console.error('No fue posible reemplazar la imagen.', error);
                     this.imageError = error instanceof Error
@@ -531,15 +670,20 @@
                 }
 
                 const imageMatch = this.imageMatchForRow(row);
+                const dataState = this.dataReview.byRow[String(row.sourceRow)] ?? {
+                    status: 'error',
+                    errors: ['No se pudo revisar la fila.'],
+                    warnings: [],
+                };
 
-                if (row.status === 'error' || ['missing', 'duplicate'].includes(imageMatch?.status)) {
+                if (dataState.status === 'error' || ['missing', 'duplicate'].includes(imageMatch?.status)) {
                     return 'error';
                 }
                 if (!imageMatch) {
                     return 'pending';
                 }
                 if (
-                    row.status === 'warning'
+                    dataState.status === 'warning'
                     || ['warning', 'replacement', 'generic'].includes(imageMatch.status)
                 ) {
                     return 'warning';
@@ -580,7 +724,11 @@
                 }
 
                 const imageMatch = this.imageMatchForRow(row);
-                const issues = [...row.errors, ...row.warnings];
+                const dataState = this.dataReview.byRow[String(row.sourceRow)] ?? {
+                    errors: ['No se pudo revisar la fila.'],
+                    warnings: [],
+                };
+                const issues = [...dataState.errors, ...dataState.warnings];
 
                 if (!imageMatch) {
                     issues.push('Imagen pendiente de revisión.');
@@ -589,6 +737,17 @@
                 }
 
                 return issues.join(' · ');
+            },
+            confirmImportedCatalog() {
+                if (!this.importReadiness.canConfirm) return;
+
+                this.approvedCatalogModel = importReviewEngine.buildApprovedModel({
+                    rows: this.importResult.rows,
+                    editsByRow: this.importEditsByRow,
+                    excludedRows: this.excludedImportRows,
+                    imageMatchesByRow: this.imageMatchesByRow,
+                    categories: this.catalogCategories,
+                });
             },
             async exportCurrentPdf() {
                 if (this.pdfExporting) return;

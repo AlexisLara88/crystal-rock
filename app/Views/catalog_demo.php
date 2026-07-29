@@ -714,7 +714,7 @@
                         <strong>{{ importResult.summary.totalRows }}</strong>
                     </div>
                     <div class="summary-warning">
-                        <span>Advertencias</span>
+                        <span>Avisos de origen</span>
                         <strong>{{ importResult.summary.warningRows }}</strong>
                     </div>
                     <div :class="{ 'summary-error': importResult.summary.errorRows > 0 }">
@@ -804,6 +804,51 @@
                     </div>
                 </section>
 
+                <section class="data-review-section">
+                    <div class="data-review-heading">
+                        <div>
+                            <span class="eyebrow">3 · Corregir y categorizar</span>
+                            <h3>Preparar los datos para la composición</h3>
+                            <p>Las categorías iniciales son sugerencias editables. Corregí cada fila o aplicá una categoría en grupo.</p>
+                        </div>
+                        <span class="data-review-badge">
+                            {{ importReadiness.readyRows }}/{{ importReadiness.activeRows }} listas
+                        </span>
+                    </div>
+
+                    <div class="category-manager">
+                        <div class="category-list" aria-label="Categorías disponibles">
+                            <span v-for="category in catalogCategories" :key="category">{{ category }}</span>
+                        </div>
+                        <form class="category-create" @submit.prevent="addCatalogCategory">
+                            <input
+                                v-model="newCategoryName"
+                                type="text"
+                                maxlength="60"
+                                placeholder="Nueva categoría"
+                            >
+                            <button type="submit" :disabled="!newCategoryName.trim()">Agregar</button>
+                        </form>
+                    </div>
+
+                    <div class="bulk-category-controls">
+                        <strong>{{ selectedImportRowCount }} seleccionadas</strong>
+                        <select v-model="bulkCategory">
+                            <option value="">Elegir categoría…</option>
+                            <option v-for="category in catalogCategories" :key="category" :value="category">
+                                {{ category }}
+                            </option>
+                        </select>
+                        <button
+                            type="button"
+                            :disabled="!bulkCategory || selectedImportRowCount === 0"
+                            @click="applyBulkCategory"
+                        >
+                            Asignar a selección
+                        </button>
+                    </div>
+                </section>
+
                 <div class="import-mapping">
                     <span class="eyebrow">Mapeo detectado</span>
                     <div>
@@ -821,10 +866,21 @@
                     <table class="import-table">
                         <thead>
                             <tr>
-                                <th>Fila</th>
+                                <th>
+                                    <label class="select-all-rows">
+                                        <input
+                                            type="checkbox"
+                                            :checked="allActiveImportRowsSelected"
+                                            aria-label="Seleccionar todas las filas activas"
+                                            @change="toggleAllImportRows"
+                                        >
+                                        <span>Fila</span>
+                                    </label>
+                                </th>
                                 <th>Producto</th>
                                 <th>Código</th>
                                 <th>Precio</th>
+                                <th>Categoría</th>
                                 <th>Vista previa</th>
                                 <th>Estado</th>
                                 <th>Imagen (@Image)</th>
@@ -837,10 +893,64 @@
                                 :key="row.sourceRow"
                                 :class="{ 'import-row-excluded': isRowExcluded(row) }"
                             >
-                                <td>{{ row.sourceRow }}</td>
-                                <td>{{ row.values.name || '—' }}</td>
-                                <td>{{ row.values.code || '—' }}</td>
-                                <td>{{ row.values.price || '—' }}</td>
+                                <td>
+                                    <label class="row-selector">
+                                        <input
+                                            type="checkbox"
+                                            :checked="Boolean(selectedImportRows[String(row.sourceRow)])"
+                                            :disabled="isRowExcluded(row)"
+                                            :aria-label="'Seleccionar fila ' + row.sourceRow"
+                                            @change="toggleImportRowSelection(row)"
+                                        >
+                                        <span>{{ row.sourceRow }}</span>
+                                    </label>
+                                </td>
+                                <td>
+                                    <input
+                                        v-model="importEditsByRow[String(row.sourceRow)].name"
+                                        class="table-edit table-edit-name"
+                                        type="text"
+                                        :disabled="isRowExcluded(row)"
+                                        aria-label="Nombre del producto"
+                                        @input="invalidateApprovedCatalog"
+                                    >
+                                </td>
+                                <td>
+                                    <input
+                                        v-model="importEditsByRow[String(row.sourceRow)].code"
+                                        class="table-edit table-edit-code"
+                                        type="text"
+                                        :disabled="isRowExcluded(row)"
+                                        aria-label="Código del producto"
+                                        @input="invalidateApprovedCatalog"
+                                    >
+                                </td>
+                                <td>
+                                    <input
+                                        v-model="importEditsByRow[String(row.sourceRow)].price"
+                                        class="table-edit table-edit-price"
+                                        type="text"
+                                        inputmode="decimal"
+                                        :disabled="isRowExcluded(row)"
+                                        aria-label="Precio del producto"
+                                        @input="invalidateApprovedCatalog"
+                                        @blur="normalizeEditedPrice(row)"
+                                    >
+                                </td>
+                                <td>
+                                    <select
+                                        v-model="importEditsByRow[String(row.sourceRow)].category"
+                                        class="table-edit table-edit-category"
+                                        :disabled="isRowExcluded(row)"
+                                        aria-label="Categoría del producto"
+                                        @change="invalidateApprovedCatalog"
+                                    >
+                                        <option value="">Sin categoría</option>
+                                        <option v-for="category in catalogCategories" :key="category" :value="category">
+                                            {{ category }}
+                                        </option>
+                                    </select>
+                                </td>
                                 <td>
                                     <img
                                         v-if="imageMatchForRow(row)?.image"
@@ -910,6 +1020,48 @@
                     </table>
                 </div>
 
+                <section class="catalog-confirmation">
+                    <div class="catalog-readiness-summary">
+                        <div>
+                            <span>Listas</span>
+                            <strong>{{ importReadiness.readyRows }}</strong>
+                        </div>
+                        <div :class="{ blocked: importReadiness.blockedRows > 0 }">
+                            <span>Bloqueadas</span>
+                            <strong>{{ importReadiness.blockedRows }}</strong>
+                        </div>
+                        <div>
+                            <span>Con avisos</span>
+                            <strong>{{ importReadiness.warningRows }}</strong>
+                        </div>
+                        <div>
+                            <span>Excluidas</span>
+                            <strong>{{ importReadiness.excludedRows }}</strong>
+                        </div>
+                    </div>
+                    <div class="catalog-confirm-action">
+                        <div>
+                            <strong v-if="approvedCatalogModel">
+                                Modelo confirmado: {{ approvedCatalogModel.products.length }} productos en
+                                {{ approvedCatalogModel.categories.length }} categorías.
+                            </strong>
+                            <span v-else-if="importReadiness.canConfirm">
+                                Todos los productos activos están listos para componer.
+                            </span>
+                            <span v-else>
+                                Resolvé las filas bloqueadas y las imágenes pendientes para continuar.
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            :disabled="!importReadiness.canConfirm"
+                            @click="confirmImportedCatalog"
+                        >
+                            {{ approvedCatalogModel ? 'Modelo confirmado' : 'Confirmar para composición' }}
+                        </button>
+                    </div>
+                </section>
+
                 <footer class="import-dialog-footer">
                     <span>Vista previa temporal · Los datos todavía no alimentan las plantillas.</span>
                     <button type="button" class="ghost-button" @click="closeImportPanel">Cerrar revisión</button>
@@ -934,6 +1086,7 @@
 <script src="https://unpkg.com/jspdf@4.2.1/dist/jspdf.umd.min.js"></script>
 <script src="<?= base_url('assets/js/catalog-presentation.js?v=' . filemtime(FCPATH . 'assets/js/catalog-presentation.js')) ?>"></script>
 <script src="<?= base_url('assets/js/catalog-pdf-export.js?v=' . filemtime(FCPATH . 'assets/js/catalog-pdf-export.js')) ?>"></script>
+<script src="<?= base_url('assets/js/catalog-import-review.js?v=' . filemtime(FCPATH . 'assets/js/catalog-import-review.js')) ?>"></script>
 <script src="<?= base_url('assets/js/' . $pageScript . '?v=' . filemtime(FCPATH . 'assets/js/' . $pageScript)) ?>"></script>
 </body>
 </html>
