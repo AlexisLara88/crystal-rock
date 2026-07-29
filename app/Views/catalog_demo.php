@@ -25,11 +25,11 @@
 
         <div class="header-actions">
             <label class="theme-select">
-                <span>Tratamiento</span>
+                <span>Estilo de portada</span>
                 <select v-model="coverVariant">
                     <option value="editorial">Editorial</option>
-                    <option value="promotional">Promocional</option>
-                    <option value="minimal">Minimal</option>
+                    <option value="promotional">Campaña</option>
+                    <option value="minimal">Minimal claro</option>
                 </select>
             </label>
             <button type="button" class="ghost-button" @click="showAll = !showAll">
@@ -92,7 +92,7 @@
                 >
                     <div :class="['catalog-sheet', 'sheet-' + page.type, page.type === 'cover' ? 'cover-' + coverVariant : '']">
                         <template v-if="page.type === 'cover'">
-                            <img class="sheet-background" :src="asset('cover-wine.jpg')" alt="">
+                            <img class="sheet-background" :src="asset('cover-wine.png')" alt="">
                             <div class="cover-shade"></div>
                             <div class="cover-promo">
                                 <small v-if="coverVariant === 'promotional'">¡Nuevo!</small>
@@ -127,8 +127,10 @@
                                             <dd>{{ spec[1] }}</dd>
                                         </template>
                                     </dl>
-                                    <div class="featured-code"><b>Cod.</b> {{ featuredProduct.code }}</div>
-                                    <div class="featured-price">Ud. {{ featuredProduct.price }}</div>
+                                    <div class="featured-commerce">
+                                        <div class="featured-code"><b>Cod.</b> {{ featuredProduct.code }}</div>
+                                        <div class="featured-price">Ud. {{ featuredProduct.price }}</div>
+                                    </div>
                                 </div>
                             </div>
                             <footer class="sheet-footer light-footer">
@@ -145,15 +147,21 @@
                                     :key="page.id + product.code"
                                     class="product-card"
                                 >
-                                    <div class="product-title">{{ product.name }}</div>
-                                    <dl class="product-specs">
-                                        <template v-for="spec in product.specs" :key="spec[0]">
-                                            <dt>{{ spec[0] }}</dt>
-                                            <dd>{{ spec[1] }}</dd>
-                                        </template>
-                                    </dl>
-                                    <div class="product-code"><b>Cod.</b> {{ product.code }}</div>
-                                    <div class="product-price">Ud. {{ product.price }}</div>
+                                    <div class="product-copy">
+                                        <div class="product-title">{{ product.name }}</div>
+                                        <div class="product-data">
+                                            <dl class="product-specs">
+                                                <template v-for="spec in product.specs" :key="spec[0]">
+                                                    <dt>{{ spec[0] }}</dt>
+                                                    <dd>{{ spec[1] }}</dd>
+                                                </template>
+                                            </dl>
+                                            <div class="product-commerce">
+                                                <div class="product-code"><b>Cod.</b> {{ product.code }}</div>
+                                                <div class="product-price">Ud. {{ product.price }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="product-image">
                                         <img :src="asset(product.image)" :alt="product.name">
                                     </div>
@@ -167,7 +175,7 @@
                         </template>
 
                         <template v-else-if="page.type === 'back'">
-                            <img class="sheet-background" :src="asset('back-community.jpg')" alt="">
+                            <img class="sheet-background" :src="asset('back-community.png')" alt="">
                             <div class="back-shade"></div>
                             <div class="back-content">
                                 <span class="catalog-wordmark back-wordmark">CRYSTALROCK</span>
