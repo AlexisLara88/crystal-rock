@@ -90,7 +90,6 @@
                 return {
                     ...this.activeTextSelection,
                     label: definition.label,
-                    zoneLabel: definition.zoneLabel,
                 };
             },
             activeTextControlState() {
@@ -224,21 +223,6 @@
             gridTemplateId(count) {
                 return `grid${count}`;
             },
-            templateLabel(templateId) {
-                const labels = {
-                    coverEditorial: 'Portada · Editorial',
-                    coverPromotional: 'Portada · Campaña',
-                    coverMinimal: 'Portada · Minimal claro',
-                    featured: 'Producto destacado',
-                    grid4: 'Grilla · 4 productos',
-                    grid3: 'Grilla · 3 productos',
-                    grid2: 'Grilla · 2 productos',
-                    grid1: 'Grilla · 1 producto',
-                    back: 'Contraportada',
-                };
-
-                return labels[templateId] ?? templateId;
-            },
             isTextSelected(templateId, role) {
                 return this.activeTextSelection?.templateId === templateId
                     && this.activeTextSelection?.role === role;
@@ -257,7 +241,6 @@
                 this.layoutWarning = '';
                 this.activeTextSelection = {
                     templateId,
-                    templateLabel: this.templateLabel(templateId),
                     role,
                 };
                 this.selectedTextElement = event.currentTarget;

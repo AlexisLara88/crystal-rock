@@ -456,15 +456,6 @@
             </div>
         </div>
 
-        <dl class="text-selection-meta">
-            <dt>Plantilla</dt>
-            <dd>{{ activeTextInspector.templateLabel }}</dd>
-            <dt>Alcance</dt>
-            <dd>Todas las instancias de este rol</dd>
-            <dt>Zona</dt>
-            <dd>{{ activeTextInspector.zoneLabel }}</dd>
-        </dl>
-
         <div class="text-style-controls">
             <label class="inspector-field">
                 <span>Tipografía</span>

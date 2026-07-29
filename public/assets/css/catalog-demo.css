@@ -337,29 +337,6 @@ button {
     overflow-y: auto;
 }
 
-.text-selection-meta {
-    display: grid;
-    grid-template-columns: 64px 1fr;
-    gap: 7px 10px;
-    margin: 0 0 14px;
-    padding: 12px;
-    border-radius: 11px;
-    background: #eef1ea;
-    font-size: 11px;
-    line-height: 1.4;
-}
-
-.text-selection-meta dt {
-    color: var(--muted);
-    font-weight: 700;
-}
-
-.text-selection-meta dd {
-    margin: 0;
-    color: var(--ink);
-    font-weight: 800;
-}
-
 .text-reset-button {
     width: 100%;
     min-height: 38px;
