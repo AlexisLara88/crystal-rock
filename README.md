@@ -20,8 +20,10 @@ La fase visual D1 incluye una muestra navegable con datos fijos:
 - paleta flotante amplia, legible y reposicionable, independiente del elemento seleccionado.
 - selección de texto neutra: un clic no altera dimensiones ni posición.
 - historial de sesión con deshacer/rehacer, restablecimientos amplios y advertencias visuales.
+- contrato de presentación versionado y prueba técnica PDF A4 de tres páginas.
+- descarga PDF con portada, producto destacado y grilla de cuatro productos.
 
-La importación de Excel, validaciones y generación PDF pertenecen a las siguientes fases.
+La importación de Excel y sus validaciones pertenecen a la siguiente fase. El PDF actual es una prueba técnica con datos fijos; EV8 conectará el estado del editor y los productos importados.
 
 ## Stack
 
@@ -30,7 +32,7 @@ La importación de Excel, validaciones y generación PDF pertenecen a las siguie
 - Vue 3 mediante CDN
 - CSS propio para las composiciones A4
 - MariaDB/MySQL previsto para el producto completo
-- mPDF previsto para la generación PDF
+- mPDF 8.3 para la generación PDF
 
 ## Inicio local
 
@@ -47,6 +49,7 @@ Rutas disponibles:
 ```text
 /
 /demo/catalogo
+/demo/catalogo/pdf-prueba
 ```
 
 ## Verificaciones

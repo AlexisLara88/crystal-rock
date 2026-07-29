@@ -140,6 +140,9 @@ button {
 
 .theme-select select,
 .ghost-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     height: 42px;
     padding: 0 15px;
     border: 1px solid rgba(41, 37, 34, .14);
@@ -147,6 +150,7 @@ button {
     color: var(--ink);
     background: #fff;
     font-weight: 700;
+    text-decoration: none;
 }
 
 .ghost-button {
@@ -158,6 +162,10 @@ button {
 .ghost-button:hover {
     color: #fff;
     background: var(--red);
+}
+
+.pdf-proof-button {
+    white-space: nowrap;
 }
 
 .studio-main {

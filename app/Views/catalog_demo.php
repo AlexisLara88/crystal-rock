@@ -35,6 +35,9 @@
             <button type="button" class="ghost-button" @click="toggleShowAll">
                 {{ showAll ? 'Ver una página' : 'Ver catálogo completo' }}
             </button>
+            <a class="ghost-button pdf-proof-button" href="<?= site_url('demo/catalogo/pdf-prueba') ?>">
+                Descargar PDF de prueba
+            </a>
         </div>
     </header>
 
