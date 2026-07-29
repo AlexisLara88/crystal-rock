@@ -783,7 +783,7 @@ button {
 
 .import-table {
     width: 100%;
-    min-width: 1240px;
+    min-width: 1180px;
     border-collapse: collapse;
     font-size: 13px;
 }
@@ -837,34 +837,32 @@ button {
 }
 
 .import-table td:nth-child(7) {
-    min-width: 210px;
+    min-width: 155px;
+    max-width: 175px;
 }
 
 .import-table td:nth-child(8) {
-    min-width: 165px;
-    padding-right: 24px;
+    min-width: 150px;
+    padding-right: 20px;
 }
 
 .import-table td:nth-child(9) {
-    min-width: 174px;
-    padding-left: 24px;
+    min-width: 168px;
+    padding-left: 20px;
 }
 
 .import-table th:last-child,
 .import-table td:last-child {
-    position: sticky;
-    right: 0;
-    z-index: 1;
     border-left: 1px solid var(--line);
-    background: #fff;
-    box-shadow: -10px 0 18px rgba(41, 51, 47, .08);
 }
 
 .import-table th:last-child {
-    z-index: 2;
-    background: #f3eee7;
     text-align: center;
-    padding-left: 24px;
+    padding-left: 20px;
+}
+
+.import-table td:nth-child(7) small {
+    overflow-wrap: anywhere;
 }
 
 .import-table td small {
@@ -2904,7 +2902,7 @@ body {
 
 .import-table th:last-child,
 .import-table td:last-child {
-    box-shadow: -10px 0 18px rgba(0, 0, 0, .22);
+    box-shadow: none;
 }
 
 .import-row-actions button,
