@@ -17,8 +17,9 @@ final class CatalogPdfRenderer
         ?string $tempDir = null,
     ) {
         $publicRoot = defined('FCPATH') ? FCPATH : PUBLICPATH;
+        $effectiveUser = function_exists('posix_geteuid') ? (string) posix_geteuid() : PHP_SAPI;
         $this->assetRoot = $assetRoot ?? $publicRoot . 'assets/img/catalog';
-        $this->tempDir = $tempDir ?? WRITEPATH . 'cache/mpdf';
+        $this->tempDir = $tempDir ?? sys_get_temp_dir() . '/crystal-rock-mpdf-' . hash('sha256', $effectiveUser);
     }
 
     /**
