@@ -391,7 +391,7 @@
             },
             dockFloatingEditor() {
                 const viewportPadding = 12;
-                const panelWidth = 300;
+                const panelWidth = 340;
 
                 this.floatingEditorPosition = {
                     top: 96,
@@ -452,7 +452,7 @@
             },
             constrainFloatingEditor() {
                 const panel = document.querySelector('.floating-element-editor');
-                const panelWidth = panel?.offsetWidth ?? 300;
+                const panelWidth = panel?.offsetWidth ?? 340;
                 const viewportPadding = 12;
                 const minimumVisibleHeight = 180;
 
