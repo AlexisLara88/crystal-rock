@@ -196,15 +196,15 @@ button {
     z-index: 100;
     inset: 0;
     display: grid;
-    padding: 30px;
+    padding: 20px;
     place-items: center;
     background: rgba(41, 51, 47, .58);
     backdrop-filter: blur(8px);
 }
 
 .import-dialog {
-    width: min(1080px, 100%);
-    max-height: calc(100vh - 60px);
+    width: min(1320px, 100%);
+    max-height: calc(100vh - 40px);
     overflow: auto;
     border: 1px solid rgba(255, 255, 255, .55);
     border-radius: 24px;
@@ -610,6 +610,7 @@ button {
 
 .import-table {
     width: 100%;
+    min-width: 1040px;
     border-collapse: collapse;
     font-size: 13px;
 }
@@ -641,17 +642,32 @@ button {
 }
 
 .import-table td:nth-child(2) {
-    min-width: 210px;
+    min-width: 185px;
     color: var(--ink);
     font-weight: 700;
 }
 
 .import-table td:nth-child(7) {
-    min-width: 245px;
+    min-width: 210px;
 }
 
 .import-table td:nth-child(8) {
-    min-width: 170px;
+    min-width: 152px;
+}
+
+.import-table th:last-child,
+.import-table td:last-child {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    border-left: 1px solid var(--line);
+    background: #fff;
+    box-shadow: -10px 0 18px rgba(41, 51, 47, .08);
+}
+
+.import-table th:last-child {
+    z-index: 2;
+    background: #f3eee7;
 }
 
 .import-table td small {
