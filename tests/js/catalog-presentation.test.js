@@ -50,6 +50,32 @@ test('rechaza propiedades y roles no declarados', () => {
         () => presentation.resolveRoleStyle(state, 'grid4', 'unknownRole'),
         /Rol visual desconocido/,
     );
+    assert.throws(
+        () => presentation.updateRoleStyle(state, 'grid4', 'productCode', { fontSize: '100px' }),
+        /Tamaño fuera del rango/,
+    );
+    assert.throws(
+        () => presentation.updateRoleStyle(state, 'grid4', 'productCode', { fontFamily: 'Comic Sans MS' }),
+        /Tipografía no permitida/,
+    );
+});
+
+test('acepta tipografía lógica, color personalizado y alineación por variante', () => {
+    const state = presentation.createPresentationState();
+
+    presentation.updateRoleStyle(state, 'grid3', 'productPrice', {
+        fontFamily: 'font:serifAccent',
+        color: '#123abc',
+        backgroundColor: 'transparent',
+        textAlign: 'right',
+    });
+
+    const style = presentation.resolveRoleStyle(state, 'grid3', 'productPrice');
+
+    assert.match(style.fontFamily, /Georgia/);
+    assert.equal(style.color, '#123abc');
+    assert.equal(style.backgroundColor, 'transparent');
+    assert.equal(style.textAlign, 'right');
 });
 
 test('cada estado de presentación es independiente', () => {

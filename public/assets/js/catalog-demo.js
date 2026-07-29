@@ -88,6 +88,49 @@
                     label: definition.label,
                 };
             },
+            activeTextControlState() {
+                if (!this.activeTextSelection) return null;
+
+                const { templateId, role } = this.activeTextSelection;
+                const current = presentationEngine.resolveRoleStyle(this.presentationState, templateId, role);
+                const defaults = presentationEngine.resolveDefaultRoleStyle(this.presentationState, templateId, role);
+                const theme = presentationEngine.getTheme(this.presentationState);
+                const baseSize = Number.parseFloat(defaults.fontSize);
+                const currentSize = Number.parseFloat(current.fontSize);
+                const fontKey = Object.entries(theme.fonts)
+                    .find(([, value]) => value === current.fontFamily)?.[0] ?? 'sansEditorial';
+
+                return {
+                    current,
+                    defaults,
+                    fontKey,
+                    fontSize: currentSize,
+                    minFontSize: Math.max(6, Math.ceil(baseSize * 0.7)),
+                    maxFontSize: Math.floor(baseSize * 1.5),
+                };
+            },
+            fontOptions() {
+                return [
+                    { value: 'sansEditorial', label: 'Sans editorial' },
+                    { value: 'sansCompact', label: 'Sans compacta' },
+                    { value: 'serifAccent', label: 'Serif de acento' },
+                ];
+            },
+            textColorPalette() {
+                const colors = presentationEngine.getTheme(this.presentationState).colors;
+
+                return [
+                    { name: 'Vino', value: colors.wine },
+                    { name: 'Vino oscuro', value: colors.wineDark },
+                    { name: 'Terracota', value: colors.terracotta },
+                    { name: 'Salvia', value: colors.sage },
+                    { name: 'Salvia oscura', value: colors.sageDark },
+                    { name: 'Arena', value: colors.cream },
+                    { name: 'Papel', value: colors.paper },
+                    { name: 'Tinta', value: colors.ink },
+                    { name: 'Blanco', value: colors.white },
+                ];
+            },
             floatingEditorStyle() {
                 return {
                     top: `${this.floatingEditorPosition.top}px`,
@@ -106,7 +149,17 @@
                 return `${window.CATALOG_ASSET_BASE}${file}`;
             },
             textStyle(templateId, role) {
-                return presentationEngine.resolveRoleStyle(this.presentationState, templateId, role);
+                const style = presentationEngine.resolveRoleStyle(this.presentationState, templateId, role);
+
+                if (['productName', 'productCode', 'productPrice', 'communityLink'].includes(role)) {
+                    style.justifyContent = {
+                        left: 'flex-start',
+                        center: 'center',
+                        right: 'flex-end',
+                    }[style.textAlign];
+                }
+
+                return style;
             },
             coverTemplateId() {
                 const variants = {
@@ -155,7 +208,7 @@
                     templateLabel: this.templateLabel(templateId),
                     role,
                 };
-                this.positionFloatingEditor(event.currentTarget, 225);
+                this.positionFloatingEditor(event.currentTarget, 560, 300);
             },
             selectPage(index) {
                 this.currentPage = index;
@@ -270,9 +323,8 @@
                 this.activeImageAdjustment.maskSize = 0.9;
                 this.activeImageAdjustment.rotation = 0;
             },
-            positionFloatingEditor(element, panelHeight = 310) {
+            positionFloatingEditor(element, panelHeight = 310, panelWidth = 270) {
                 const bounds = element.getBoundingClientRect();
-                const panelWidth = 270;
                 const gap = 14;
                 const viewportPadding = 12;
                 let left = bounds.right + gap;
@@ -314,6 +366,34 @@
                     this.activeTextSelection.templateId,
                     this.activeTextSelection.role,
                 );
+            },
+            updateSelectedText(patch) {
+                if (!this.activeTextSelection) return;
+
+                presentationEngine.updateRoleStyle(
+                    this.presentationState,
+                    this.activeTextSelection.templateId,
+                    this.activeTextSelection.role,
+                    patch,
+                );
+            },
+            setSelectedFont(event) {
+                this.updateSelectedText({ fontFamily: `font:${event.target.value}` });
+            },
+            setSelectedFontSize(event) {
+                this.updateSelectedText({ fontSize: `${Number(event.target.value)}px` });
+            },
+            setSelectedWeight(event) {
+                this.updateSelectedText({ fontWeight: Number(event.target.value) });
+            },
+            setSelectedColor(property, value) {
+                this.updateSelectedText({ [property]: value });
+            },
+            setSelectedAlignment(alignment) {
+                this.updateSelectedText({ textAlign: alignment });
+            },
+            colorInputValue(value, fallback = '#ffffff') {
+                return /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
             },
             clamp(value, minimum, maximum) {
                 return Math.min(Math.max(value, minimum), maximum);

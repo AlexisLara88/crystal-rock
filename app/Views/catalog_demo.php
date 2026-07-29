@@ -437,7 +437,6 @@
         <button type="button" class="close-image-editor" @click="deselectText" aria-label="Cerrar selección de texto">×</button>
         <span class="image-editor-kicker">Elemento de texto</span>
         <strong>{{ activeTextInspector.label }}</strong>
-        <p>La selección está lista. Los controles de estilo se incorporan en EV3.</p>
 
         <dl class="text-selection-meta">
             <dt>Plantilla</dt>
@@ -445,6 +444,111 @@
             <dt>Alcance</dt>
             <dd>Todas las instancias de este rol</dd>
         </dl>
+
+        <div class="text-style-controls">
+            <label class="inspector-field">
+                <span>Tipografía</span>
+                <select :value="activeTextControlState.fontKey" @change="setSelectedFont">
+                    <option v-for="font in fontOptions" :key="font.value" :value="font.value">
+                        {{ font.label }}
+                    </option>
+                </select>
+            </label>
+
+            <label class="inspector-field font-size-field">
+                <span>Tamaño</span>
+                <input
+                    type="range"
+                    :min="activeTextControlState.minFontSize"
+                    :max="activeTextControlState.maxFontSize"
+                    step="1"
+                    :value="activeTextControlState.fontSize"
+                    @input="setSelectedFontSize"
+                >
+                <output>{{ activeTextControlState.fontSize }} px</output>
+            </label>
+
+            <div class="inspector-row">
+                <label class="inspector-field">
+                    <span>Peso</span>
+                    <select :value="activeTextControlState.current.fontWeight" @change="setSelectedWeight">
+                        <option value="300">Light</option>
+                        <option value="400">Regular</option>
+                        <option value="600">Semibold</option>
+                        <option value="700">Bold</option>
+                        <option value="800">Extra bold</option>
+                    </select>
+                </label>
+
+                <div class="inspector-field">
+                    <span>Alineación</span>
+                    <div class="alignment-controls">
+                        <button
+                            v-for="alignment in ['left', 'center', 'right']"
+                            :key="alignment"
+                            type="button"
+                            :class="{ active: activeTextControlState.current.textAlign === alignment }"
+                            @click="setSelectedAlignment(alignment)"
+                        >
+                            {{ alignment === 'left' ? '≡←' : alignment === 'center' ? '≡' : '→≡' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="color-editor">
+                <div class="color-editor-heading">
+                    <span>Color de texto</span>
+                    <input
+                        type="color"
+                        :value="colorInputValue(activeTextControlState.current.color, '#29332f')"
+                        aria-label="Color de texto personalizado"
+                        @input="setSelectedColor('color', $event.target.value)"
+                    >
+                </div>
+                <div class="color-swatches">
+                    <button
+                        v-for="color in textColorPalette"
+                        :key="'text-' + color.name"
+                        type="button"
+                        :title="color.name"
+                        :aria-label="'Usar ' + color.name + ' como color de texto'"
+                        :style="{ backgroundColor: color.value }"
+                        @click="setSelectedColor('color', color.value)"
+                    ></button>
+                </div>
+            </div>
+
+            <div class="color-editor">
+                <div class="color-editor-heading">
+                    <span>Color de fondo</span>
+                    <input
+                        type="color"
+                        :value="colorInputValue(activeTextControlState.current.backgroundColor)"
+                        aria-label="Color de fondo personalizado"
+                        @input="setSelectedColor('backgroundColor', $event.target.value)"
+                    >
+                </div>
+                <div class="color-swatches">
+                    <button
+                        v-for="color in textColorPalette"
+                        :key="'background-' + color.name"
+                        type="button"
+                        :title="color.name"
+                        :aria-label="'Usar ' + color.name + ' como fondo'"
+                        :style="{ backgroundColor: color.value }"
+                        @click="setSelectedColor('backgroundColor', color.value)"
+                    ></button>
+                    <button
+                        type="button"
+                        class="transparent-swatch"
+                        title="Sin fondo"
+                        aria-label="Quitar color de fondo"
+                        @click="setSelectedColor('backgroundColor', 'transparent')"
+                    >×</button>
+                </div>
+            </div>
+        </div>
 
         <button type="button" class="text-reset-button" @click="resetSelectedText">
             Restablecer elemento

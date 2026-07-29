@@ -336,13 +336,57 @@
         templateRoleOverrides: {},
     });
 
-    const resolveRoleStyle = (state, templateId, role) => {
+    const validateStylePatch = (state, templateId, role, patch) => {
+        if (patch.fontSize !== undefined) {
+            const baseSize = Number.parseFloat(resolveDefaultRoleStyle(state, templateId, role).fontSize);
+            const requestedSize = Number.parseFloat(patch.fontSize);
+
+            if (
+                !Number.isFinite(requestedSize)
+                || requestedSize < baseSize * 0.7
+                || requestedSize > baseSize * 1.5
+            ) {
+                throw new Error(`Tamaño fuera del rango permitido para ${role}`);
+            }
+        }
+
+        if (patch.fontFamily !== undefined) {
+            const allowedFonts = Object.keys(state.theme?.fonts ?? THEME.fonts).map((key) => `font:${key}`);
+
+            if (!allowedFonts.includes(patch.fontFamily)) {
+                throw new Error(`Tipografía no permitida para ${role}`);
+            }
+        }
+
+        if (patch.fontWeight !== undefined && ![300, 400, 600, 700, 800].includes(Number(patch.fontWeight))) {
+            throw new Error(`Peso no permitido para ${role}`);
+        }
+
+        if (patch.textAlign !== undefined && !['left', 'center', 'right'].includes(patch.textAlign)) {
+            throw new Error(`Alineación no permitida para ${role}`);
+        }
+    };
+
+    const resolveDefaultRoleStyle = (state, templateId, role) => {
         assertTemplateAndRole(templateId, role);
 
         const theme = state.theme ?? THEME;
         const merged = {
             ...BASE_ROLE_STYLES[role],
             ...(TEMPLATE_STYLES[templateId][role] ?? {}),
+        };
+
+        return Object.fromEntries(
+            Object.entries(merged).map(([property, value]) => [property, resolveToken(value, theme)]),
+        );
+    };
+
+    const resolveRoleStyle = (state, templateId, role) => {
+        assertTemplateAndRole(templateId, role);
+
+        const theme = state.theme ?? THEME;
+        const merged = {
+            ...resolveDefaultRoleStyle(state, templateId, role),
             ...(state.globalRoleOverrides?.[role] ?? {}),
             ...(state.templateRoleOverrides?.[templateId]?.[role] ?? {}),
         };
@@ -361,6 +405,8 @@
         if (invalidProperty) {
             throw new Error(`Propiedad no permitida para ${role}: ${invalidProperty}`);
         }
+
+        validateStylePatch(state, templateId, role, patch);
 
         state.templateRoleOverrides[templateId] ??= {};
         state.templateRoleOverrides[templateId][role] = {
@@ -383,10 +429,12 @@
 
     return Object.freeze({
         createPresentationState,
+        resolveDefaultRoleStyle,
         resolveRoleStyle,
         updateRoleStyle,
         resetRoleStyle,
         getRoleDefinition: (role) => deepClone(ROLE_DEFINITIONS[role] ?? null),
+        getTheme: (state) => deepClone(state?.theme ?? THEME),
         listRoles: () => Object.keys(ROLE_DEFINITIONS),
         listTemplates: () => Object.keys(TEMPLATE_STYLES),
     });
