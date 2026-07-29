@@ -282,14 +282,16 @@
         <div class="position-controls" aria-label="Posición de la imagen">
             <button type="button" @click="nudgeImage(0, -8)" aria-label="Mover arriba">↑</button>
             <button type="button" @click="nudgeImage(-8, 0)" aria-label="Mover a la izquierda">←</button>
-            <button type="button" @click="resetImageAdjustment" aria-label="Centrar imagen">●</button>
+            <button type="button" @click="resetImageAdjustment" aria-label="Restablecer ajuste">●</button>
             <button type="button" @click="nudgeImage(8, 0)" aria-label="Mover a la derecha">→</button>
             <button type="button" @click="nudgeImage(0, 8)" aria-label="Mover abajo">↓</button>
         </div>
 
-        <button type="button" class="reset-image" @click="resetImageAdjustment">
-            Centrar y restablecer
-        </button>
+        <div class="rotation-controls" aria-label="Rotación de la imagen">
+            <button type="button" @click="rotateImage(-15)" aria-label="Girar 15 grados a la izquierda">↶</button>
+            <span>Giro <output>{{ Math.round(activeImageAdjustment.rotation) }}°</output></span>
+            <button type="button" @click="rotateImage(15)" aria-label="Girar 15 grados a la derecha">↷</button>
+        </div>
         <small>Los controles y la selección no aparecen en el PDF.</small>
     </aside>
 </div>

@@ -110,16 +110,17 @@
                         x: 0,
                         y: 0,
                         maskSize: 0.9,
+                        rotation: 0,
                     };
                 }
 
                 return this.imageAdjustments[key];
             },
             imageStyle(key) {
-                const adjustment = this.imageAdjustments[key] ?? { zoom: 1, x: 0, y: 0 };
+                const adjustment = this.imageAdjustments[key] ?? { zoom: 1, x: 0, y: 0, rotation: 0 };
 
                 return {
-                    transform: `translate3d(${adjustment.x}%, ${adjustment.y}%, 0) scale(${adjustment.zoom})`,
+                    transform: `translate3d(${adjustment.x}%, ${adjustment.y}%, 0) scale(${adjustment.zoom}) rotate(${adjustment.rotation}deg)`,
                 };
             },
             maskStyle(key) {
@@ -184,6 +185,16 @@
                 this.activeImageAdjustment.x = this.clamp(this.activeImageAdjustment.x + deltaX, -50, 50);
                 this.activeImageAdjustment.y = this.clamp(this.activeImageAdjustment.y + deltaY, -50, 50);
             },
+            rotateImage(degrees) {
+                if (!this.activeImageAdjustment) return;
+
+                let rotation = this.activeImageAdjustment.rotation + degrees;
+
+                if (rotation > 180) rotation -= 360;
+                if (rotation < -180) rotation += 360;
+
+                this.activeImageAdjustment.rotation = rotation;
+            },
             resetImageAdjustment() {
                 if (!this.activeImageAdjustment) return;
 
@@ -191,6 +202,7 @@
                 this.activeImageAdjustment.x = 0;
                 this.activeImageAdjustment.y = 0;
                 this.activeImageAdjustment.maskSize = 0.9;
+                this.activeImageAdjustment.rotation = 0;
             },
             positionFloatingEditor(element) {
                 const bounds = element.getBoundingClientRect();

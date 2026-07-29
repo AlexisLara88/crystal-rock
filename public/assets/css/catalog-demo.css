@@ -420,7 +420,7 @@ button {
 }
 
 .position-controls button,
-.reset-image {
+.rotation-controls button {
     border: 1px solid rgba(88, 106, 91, .28);
     color: var(--sage-dark);
     background: #fff;
@@ -435,17 +435,42 @@ button {
 }
 
 .position-controls button:hover,
-.reset-image:hover {
+.rotation-controls button:hover {
     border-color: var(--sage-dark);
     background: #eef1ea;
 }
 
-.reset-image {
+.rotation-controls {
+    display: grid;
+    grid-template-columns: 42px 1fr 42px;
     width: 100%;
-    min-height: 34px;
+    gap: 8px;
+    align-items: center;
+}
+
+.rotation-controls button {
+    display: grid;
+    height: 34px;
+    place-items: center;
     border-radius: 10px;
+    font-size: 18px;
+}
+
+.rotation-controls span {
+    display: flex;
+    height: 34px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 11px;
+    border-radius: 10px;
+    color: var(--muted);
+    background: #eef1ea;
     font-size: 10px;
     font-weight: 800;
+}
+
+.rotation-controls output {
+    color: var(--red);
 }
 
 .sidebar-note {
