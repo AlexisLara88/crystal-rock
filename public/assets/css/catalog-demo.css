@@ -210,6 +210,9 @@ button {
     border-radius: 24px;
     background: var(--paper);
     box-shadow: 0 32px 90px rgba(24, 27, 25, .32);
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
 }
 
 .import-dialog-header {
@@ -228,15 +231,18 @@ button {
 .import-dialog-header h2 {
     margin: 5px 0 7px;
     color: var(--red);
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 28px;
-    font-weight: 400;
+    font-family: inherit;
+    font-size: 26px;
+    font-weight: 750;
+    letter-spacing: -.02em;
+    line-height: 1.15;
 }
 
 .import-dialog-header p {
     margin: 0;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 14px;
+    line-height: 1.45;
 }
 
 .import-close {
@@ -261,7 +267,11 @@ button {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 14px;
     align-items: stretch;
-    padding: 24px 30px 0;
+    padding: 26px 30px 30px;
+}
+
+.import-form-compact {
+    padding-bottom: 0;
 }
 
 .import-dropzone {
@@ -300,14 +310,15 @@ button {
 
 .import-dropzone strong {
     overflow: hidden;
-    font-size: 14px;
+    font-size: 15px;
+    line-height: 1.3;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .import-dropzone small {
     color: var(--muted);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .import-submit {
@@ -316,6 +327,7 @@ button {
     border-radius: 16px;
     color: #fff;
     background: var(--red);
+    font-size: 14px;
     font-weight: 800;
 }
 
@@ -325,10 +337,10 @@ button {
 }
 
 .import-message {
-    margin: 16px 30px 0;
+    margin: 16px 30px 28px;
     padding: 12px 15px;
     border-radius: 12px;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .import-message-error {
@@ -355,7 +367,7 @@ button {
     display: block;
     margin-bottom: 5px;
     color: var(--muted);
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: .06em;
     text-transform: uppercase;
 }
@@ -364,7 +376,7 @@ button {
     display: block;
     overflow: hidden;
     color: var(--ink);
-    font-size: 15px;
+    font-size: 16px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -386,7 +398,8 @@ button {
     border-radius: 0 12px 12px 0;
     color: #765442;
     background: rgba(201, 121, 91, .1);
-    font-size: 12px;
+    font-size: 13px;
+    line-height: 1.45;
 }
 
 .import-notices p {
@@ -413,7 +426,7 @@ button {
     border-radius: 999px;
     color: var(--sage-dark);
     background: rgba(140, 155, 133, .14);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
 }
 
@@ -433,12 +446,12 @@ button {
 .import-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .import-table th,
 .import-table td {
-    padding: 11px 13px;
+    padding: 13px 14px;
     border-bottom: 1px solid var(--line);
     text-align: left;
     vertical-align: top;
@@ -449,7 +462,7 @@ button {
     top: 0;
     color: var(--muted);
     background: #f3eee7;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: .06em;
     text-transform: uppercase;
 }
@@ -476,15 +489,15 @@ button {
     display: block;
     margin-top: 6px;
     color: var(--muted);
-    font-size: 10px;
-    line-height: 1.3;
+    font-size: 11px;
+    line-height: 1.4;
 }
 
 .row-status {
     display: inline-flex;
     padding: 5px 8px;
     border-radius: 999px;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 800;
     letter-spacing: .05em;
     text-transform: uppercase;
@@ -510,9 +523,9 @@ button {
     justify-content: space-between;
     gap: 20px;
     align-items: center;
-    padding: 18px 30px 25px;
+    padding: 22px 30px 30px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .pdf-export-stage {
@@ -2053,6 +2066,7 @@ button {
     }
 
     .import-notices,
+    .import-message,
     .import-table-wrap {
         margin-right: 18px;
         margin-left: 18px;

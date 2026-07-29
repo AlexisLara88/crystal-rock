@@ -668,7 +668,10 @@
                 >×</button>
             </header>
 
-            <form class="import-form" @submit.prevent="importCatalogFile">
+            <form
+                :class="['import-form', { 'import-form-compact': importResult || importError }]"
+                @submit.prevent="importCatalogFile"
+            >
                 <label class="import-dropzone">
                     <input
                         ref="catalogFileInput"
