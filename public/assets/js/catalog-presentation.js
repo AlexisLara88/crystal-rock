@@ -48,28 +48,47 @@
         },
     };
 
+    const DEFAULT_LAYOUT_RULE = Object.freeze({
+        minWidthScale: 0.6,
+        maxWidthScale: 1,
+        minHeightScale: 0.6,
+        maxHeightScale: 1,
+        nudgeStep: 4,
+        movement: 'both',
+    });
+
+    const defineRole = (label, zoneLabel, layout = {}) => ({
+        label,
+        zoneLabel,
+        properties: [...EDITABLE_PROPERTIES],
+        layout: {
+            ...DEFAULT_LAYOUT_RULE,
+            ...layout,
+        },
+    });
+
     const ROLE_DEFINITIONS = {
-        wordmark: { label: 'Marca', properties: EDITABLE_PROPERTIES },
-        coverTitle: { label: 'Título de portada', properties: EDITABLE_PROPERTIES },
-        coverSubtitle: { label: 'Bajada de portada', properties: EDITABLE_PROPERTIES },
-        promotionText: { label: 'Texto promocional', properties: EDITABLE_PROPERTIES },
-        promotionValue: { label: 'Valor promocional', properties: EDITABLE_PROPERTIES },
-        promotionBadge: { label: 'Etiqueta promocional', properties: EDITABLE_PROPERTIES },
-        date: { label: 'Fecha', properties: EDITABLE_PROPERTIES },
-        category: { label: 'Categoría', properties: EDITABLE_PROPERTIES },
-        featuredLabel: { label: 'Etiqueta destacada', properties: EDITABLE_PROPERTIES },
-        productName: { label: 'Nombre de producto', properties: EDITABLE_PROPERTIES },
-        productSpecs: { label: 'Especificaciones', properties: EDITABLE_PROPERTIES },
-        productCode: { label: 'Código', properties: EDITABLE_PROPERTIES },
-        productPrice: { label: 'Precio', properties: EDITABLE_PROPERTIES },
-        footerWordmark: { label: 'Marca de pie', properties: EDITABLE_PROPERTIES },
-        footerTagline: { label: 'Texto de pie', properties: EDITABLE_PROPERTIES },
-        backHeading: { label: 'Título de contraportada', properties: EDITABLE_PROPERTIES },
-        backChannel: { label: 'Canal comercial', properties: EDITABLE_PROPERTIES },
-        backLink: { label: 'Enlace comercial', properties: EDITABLE_PROPERTIES },
-        backNote: { label: 'Nota comercial', properties: EDITABLE_PROPERTIES },
-        communityHeading: { label: 'Título de comunidad', properties: EDITABLE_PROPERTIES },
-        communityLink: { label: 'Enlace de comunidad', properties: EDITABLE_PROPERTIES },
+        wordmark: defineRole('Marca', 'Área de marca'),
+        coverTitle: defineRole('Título de portada', 'Bloque principal de portada'),
+        coverSubtitle: defineRole('Bajada de portada', 'Bloque principal de portada'),
+        promotionText: defineRole('Texto promocional', 'Módulo promocional'),
+        promotionValue: defineRole('Valor promocional', 'Módulo promocional'),
+        promotionBadge: defineRole('Etiqueta promocional', 'Módulo promocional'),
+        date: defineRole('Fecha', 'Área segura de portada'),
+        category: defineRole('Categoría', 'Cabecera de categoría'),
+        featuredLabel: defineRole('Etiqueta destacada', 'Imagen de apertura'),
+        productName: defineRole('Nombre de producto', 'Cabecera de producto'),
+        productSpecs: defineRole('Especificaciones', 'Ficha técnica'),
+        productCode: defineRole('Código', 'Bloque comercial'),
+        productPrice: defineRole('Precio', 'Bloque comercial'),
+        footerWordmark: defineRole('Marca de pie', 'Pie de página'),
+        footerTagline: defineRole('Texto de pie', 'Pie de página'),
+        backHeading: defineRole('Título de contraportada', 'Tarjeta de pedidos'),
+        backChannel: defineRole('Canal comercial', 'Tarjeta de pedidos'),
+        backLink: defineRole('Enlace comercial', 'Tarjeta de pedidos'),
+        backNote: defineRole('Nota comercial', 'Tarjeta de pedidos'),
+        communityHeading: defineRole('Título de comunidad', 'Llamado a comunidad'),
+        communityLink: defineRole('Enlace de comunidad', 'Llamado a comunidad'),
     };
 
     const BASE_ROLE_STYLES = {
@@ -312,6 +331,83 @@
         },
     };
 
+    const TEMPLATE_ROLES = {
+        coverEditorial: [
+            'wordmark',
+            'coverTitle',
+            'coverSubtitle',
+            'promotionText',
+            'promotionValue',
+            'date',
+        ],
+        coverPromotional: [
+            'wordmark',
+            'coverTitle',
+            'coverSubtitle',
+            'promotionText',
+            'promotionValue',
+            'promotionBadge',
+            'date',
+        ],
+        coverMinimal: [
+            'wordmark',
+            'coverTitle',
+            'coverSubtitle',
+            'date',
+        ],
+        featured: [
+            'category',
+            'featuredLabel',
+            'productName',
+            'productSpecs',
+            'productCode',
+            'productPrice',
+            'footerWordmark',
+            'footerTagline',
+        ],
+        grid4: [
+            'productName',
+            'productSpecs',
+            'productCode',
+            'productPrice',
+            'footerWordmark',
+            'footerTagline',
+        ],
+        grid3: [
+            'productName',
+            'productSpecs',
+            'productCode',
+            'productPrice',
+            'footerWordmark',
+            'footerTagline',
+        ],
+        grid2: [
+            'productName',
+            'productSpecs',
+            'productCode',
+            'productPrice',
+            'footerWordmark',
+            'footerTagline',
+        ],
+        grid1: [
+            'productName',
+            'productSpecs',
+            'productCode',
+            'productPrice',
+            'footerWordmark',
+            'footerTagline',
+        ],
+        back: [
+            'wordmark',
+            'backHeading',
+            'backChannel',
+            'backLink',
+            'backNote',
+            'communityHeading',
+            'communityLink',
+        ],
+    };
+
     const deepClone = (value) => JSON.parse(JSON.stringify(value));
 
     const resolveToken = (value, theme) => {
@@ -332,6 +428,10 @@
 
         if (!ROLE_DEFINITIONS[role]) {
             throw new Error(`Rol visual desconocido: ${role}`);
+        }
+
+        if (!TEMPLATE_ROLES[templateId].includes(role)) {
+            throw new Error(`El rol ${role} no pertenece a la plantilla ${templateId}`);
         }
     };
 
@@ -372,13 +472,19 @@
             throw new Error(`Alineación no permitida para ${role}`);
         }
 
-        for (const property of ['widthScale', 'heightScale']) {
+        const layout = ROLE_DEFINITIONS[role].layout;
+        const dimensionRanges = {
+            widthScale: [layout.minWidthScale, layout.maxWidthScale],
+            heightScale: [layout.minHeightScale, layout.maxHeightScale],
+        };
+
+        for (const [property, [minimum, maximum]] of Object.entries(dimensionRanges)) {
             if (
                 patch[property] !== undefined
                 && (
                     !Number.isFinite(Number(patch[property]))
-                    || Number(patch[property]) < 0.6
-                    || Number(patch[property]) > 1
+                    || Number(patch[property]) < minimum
+                    || Number(patch[property]) > maximum
                 )
             ) {
                 throw new Error(`Dimensión fuera del rango permitido para ${role}`);
@@ -471,5 +577,13 @@
         getTheme: (state) => deepClone(state?.theme ?? THEME),
         listRoles: () => Object.keys(ROLE_DEFINITIONS),
         listTemplates: () => Object.keys(TEMPLATE_STYLES),
+        listTemplateRoles: (templateId) => {
+            if (!TEMPLATE_ROLES[templateId]) {
+                throw new Error(`Plantilla desconocida: ${templateId}`);
+            }
+
+            return [...TEMPLATE_ROLES[templateId]];
+        },
+        isRoleSupported: (templateId, role) => Boolean(TEMPLATE_ROLES[templateId]?.includes(role)),
     });
 });

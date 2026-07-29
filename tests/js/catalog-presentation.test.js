@@ -148,3 +148,54 @@ test('restablece también los ajustes geométricos del rol', () => {
     assert.equal(style.widthScale, undefined);
     assert.equal(style.offsetX, undefined);
 });
+
+test('declara una matriz completa y válida de roles por plantilla', () => {
+    const state = presentation.createPresentationState();
+    const coveredRoles = new Set();
+    let assignments = 0;
+
+    for (const templateId of presentation.listTemplates()) {
+        const roles = presentation.listTemplateRoles(templateId);
+
+        assert.ok(roles.length > 0, `${templateId} debe declarar al menos un rol`);
+        assert.equal(new Set(roles).size, roles.length, `${templateId} no debe repetir roles`);
+
+        for (const role of roles) {
+            coveredRoles.add(role);
+            assignments += 1;
+            assert.equal(presentation.isRoleSupported(templateId, role), true);
+            assert.doesNotThrow(() => presentation.resolveRoleStyle(state, templateId, role));
+        }
+    }
+
+    assert.equal(assignments, 56);
+    assert.deepEqual([...coveredRoles].sort(), presentation.listRoles().sort());
+});
+
+test('rechaza roles conocidos que no pertenecen a una plantilla', () => {
+    const state = presentation.createPresentationState();
+
+    assert.equal(presentation.isRoleSupported('grid4', 'coverTitle'), false);
+    assert.throws(
+        () => presentation.resolveRoleStyle(state, 'grid4', 'coverTitle'),
+        /no pertenece a la plantilla/,
+    );
+    assert.throws(
+        () => presentation.listTemplateRoles('unknownTemplate'),
+        /Plantilla desconocida/,
+    );
+});
+
+test('cada rol publica límites geométricos y una zona comprensible', () => {
+    for (const role of presentation.listRoles()) {
+        const definition = presentation.getRoleDefinition(role);
+
+        assert.ok(definition.zoneLabel.length > 0);
+        assert.equal(definition.layout.minWidthScale, 0.6);
+        assert.equal(definition.layout.maxWidthScale, 1);
+        assert.equal(definition.layout.minHeightScale, 0.6);
+        assert.equal(definition.layout.maxHeightScale, 1);
+        assert.equal(definition.layout.nudgeStep, 4);
+        assert.equal(definition.layout.movement, 'both');
+    }
+});

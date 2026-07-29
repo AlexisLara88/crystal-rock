@@ -32,7 +32,7 @@
                     <option value="minimal">Minimal claro</option>
                 </select>
             </label>
-            <button type="button" class="ghost-button" @click="showAll = !showAll">
+            <button type="button" class="ghost-button" @click="toggleShowAll">
                 {{ showAll ? 'Ver una página' : 'Ver catálogo completo' }}
             </button>
         </div>
@@ -94,7 +94,7 @@
                         <template v-if="page.type === 'cover'">
                             <img class="sheet-background" :src="asset('cover-wine.png')" alt="">
                             <div class="cover-shade"></div>
-                            <div class="cover-promo">
+                            <div v-if="coverVariant !== 'minimal'" class="cover-promo">
                                 <small
                                     v-if="coverVariant === 'promotional'"
                                     :class="textSelectionClass(coverTemplateId(), 'promotionBadge')"
@@ -443,6 +443,8 @@
             <dd>{{ activeTextInspector.templateLabel }}</dd>
             <dt>Alcance</dt>
             <dd>Todas las instancias de este rol</dd>
+            <dt>Zona</dt>
+            <dd>{{ activeTextInspector.zoneLabel }}</dd>
         </dl>
 
         <div class="text-style-controls">
@@ -474,21 +476,23 @@
                     <output>X {{ activeTextControlState.offsetX }} · Y {{ activeTextControlState.offsetY }}</output>
                 </div>
                 <div class="text-position-controls" aria-label="Ajuste fino de posición">
-                    <button type="button" @click="nudgeSelectedText(0, -4)" aria-label="Mover arriba">↑</button>
-                    <button type="button" @click="nudgeSelectedText(-4, 0)" aria-label="Mover a la izquierda">←</button>
+                    <button type="button" @click="nudgeSelectedText(0, -1)" aria-label="Mover arriba">↑</button>
+                    <button type="button" @click="nudgeSelectedText(-1, 0)" aria-label="Mover a la izquierda">←</button>
                     <button type="button" class="position-center" disabled aria-label="Posición actual">●</button>
-                    <button type="button" @click="nudgeSelectedText(4, 0)" aria-label="Mover a la derecha">→</button>
-                    <button type="button" @click="nudgeSelectedText(0, 4)" aria-label="Mover abajo">↓</button>
+                    <button type="button" @click="nudgeSelectedText(1, 0)" aria-label="Mover a la derecha">→</button>
+                    <button type="button" @click="nudgeSelectedText(0, 1)" aria-label="Mover abajo">↓</button>
                 </div>
-                <small>También podés arrastrar directamente el texto seleccionado.</small>
+                <small>
+                    Paso de {{ activeTextControlState.nudgeStep }} px. También podés arrastrar directamente.
+                </small>
             </div>
 
             <label class="inspector-field dimension-field">
                 <span>Ancho del bloque</span>
                 <input
                     type="range"
-                    min="60"
-                    max="100"
+                    :min="activeTextControlState.minWidthPercent"
+                    :max="activeTextControlState.maxWidthPercent"
                     step="1"
                     :value="activeTextControlState.widthPercent"
                     @input="setSelectedDimension('widthScale', $event)"
@@ -500,8 +504,8 @@
                 <span>Alto del bloque</span>
                 <input
                     type="range"
-                    min="60"
-                    max="100"
+                    :min="activeTextControlState.minHeightPercent"
+                    :max="activeTextControlState.maxHeightPercent"
                     step="1"
                     :value="activeTextControlState.heightPercent"
                     @input="setSelectedDimension('heightScale', $event)"

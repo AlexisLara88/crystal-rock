@@ -89,6 +89,7 @@
                 return {
                     ...this.activeTextSelection,
                     label: definition.label,
+                    zoneLabel: definition.zoneLabel,
                 };
             },
             activeTextControlState() {
@@ -102,6 +103,7 @@
                 const currentSize = Number.parseFloat(current.fontSize);
                 const fontKey = Object.entries(theme.fonts)
                     .find(([, value]) => value === current.fontFamily)?.[0] ?? 'sansEditorial';
+                const layout = presentationEngine.getRoleDefinition(role).layout;
 
                 return {
                     current,
@@ -114,6 +116,11 @@
                     heightPercent: Math.round((current.heightScale ?? 1) * 100),
                     offsetX: Math.round(current.offsetX ?? 0),
                     offsetY: Math.round(current.offsetY ?? 0),
+                    minWidthPercent: Math.round(layout.minWidthScale * 100),
+                    maxWidthPercent: Math.round(layout.maxWidthScale * 100),
+                    minHeightPercent: Math.round(layout.minHeightScale * 100),
+                    maxHeightPercent: Math.round(layout.maxHeightScale * 100),
+                    nudgeStep: layout.nudgeStep,
                 };
             },
             fontOptions() {
@@ -157,6 +164,11 @@
             document.removeEventListener('pointermove', this.dragText);
             document.removeEventListener('pointerup', this.endTextDrag);
             document.removeEventListener('pointercancel', this.endTextDrag);
+        },
+        watch: {
+            coverVariant() {
+                this.deselectAll();
+            },
         },
         methods: {
             asset(file) {
@@ -244,14 +256,25 @@
                 this.startTextDrag(event);
             },
             selectPage(index) {
+                this.deselectAll();
                 this.currentPage = index;
                 this.showAll = false;
             },
             previousPage() {
-                if (this.currentPage > 0) this.currentPage -= 1;
+                if (this.currentPage > 0) {
+                    this.deselectAll();
+                    this.currentPage -= 1;
+                }
             },
             nextPage() {
-                if (this.currentPage < this.pages.length - 1) this.currentPage += 1;
+                if (this.currentPage < this.pages.length - 1) {
+                    this.deselectAll();
+                    this.currentPage += 1;
+                }
+            },
+            toggleShowAll() {
+                this.deselectAll();
+                this.showAll = !this.showAll;
             },
             ensureImageAdjustment(key, label = 'Imagen de producto') {
                 if (!this.imageAdjustments[key]) {
@@ -490,8 +513,8 @@
                 };
 
                 this.applySelectedLayoutPatch({
-                    offsetX: previous.offsetX + deltaX,
-                    offsetY: previous.offsetY + deltaY,
+                    offsetX: previous.offsetX + (deltaX * this.activeTextControlState.nudgeStep),
+                    offsetY: previous.offsetY + (deltaY * this.activeTextControlState.nudgeStep),
                 }, previous);
             },
             setSelectedDimension(property, event) {
