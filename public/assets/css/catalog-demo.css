@@ -2263,6 +2263,405 @@ button {
     text-decoration: none;
 }
 
+/* Interfaz oscura nativa. Las hojas A4 conservan deliberadamente su tema editorial claro. */
+:root {
+    --ui-bg: #141816;
+    --ui-bg-soft: #191e1b;
+    --ui-surface: #202622;
+    --ui-surface-raised: #28302b;
+    --ui-surface-hover: #303a34;
+    --ui-border: rgba(218, 232, 223, .14);
+    --ui-border-strong: rgba(218, 232, 223, .24);
+    --ui-text: #edf3ef;
+    --ui-muted: #a9b6ae;
+    --ui-wine: #d597ad;
+    --ui-sage: #a9bca8;
+    --ui-terracotta: #e09a7e;
+}
+
+html {
+    color-scheme: dark;
+    background: var(--ui-bg);
+}
+
+body {
+    color: var(--ui-text);
+    background:
+        radial-gradient(circle at 82% 0%, rgba(112, 45, 69, .2), transparent 34rem),
+        radial-gradient(circle at 5% 100%, rgba(88, 106, 91, .16), transparent 30rem),
+        var(--ui-bg);
+}
+
+.catalog-sheet,
+.pdf-export-stage {
+    color: var(--ink);
+    color-scheme: light;
+}
+
+.studio-header {
+    border-color: var(--ui-border);
+    background: rgba(24, 29, 26, .94);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
+}
+
+.studio-brand div > span,
+.theme-select,
+.sidebar-intro p,
+.page-nav small,
+.preview-controls span {
+    color: var(--ui-muted);
+}
+
+.studio-status {
+    border-color: var(--ui-border);
+    color: #dce6df;
+    background: var(--ui-surface);
+}
+
+.theme-select select,
+.ghost-button,
+.preview-controls button {
+    border-color: var(--ui-border-strong);
+    color: var(--ui-text);
+    background: var(--ui-surface-raised);
+}
+
+.ghost-button {
+    border-color: rgba(213, 151, 173, .55);
+    color: var(--ui-wine);
+}
+
+.ghost-button:hover {
+    border-color: var(--ui-wine);
+    color: #171b18;
+    background: var(--ui-wine);
+}
+
+.import-button {
+    border-color: rgba(169, 188, 168, .5);
+    color: var(--ui-sage);
+}
+
+.import-button:hover {
+    border-color: var(--ui-sage);
+    color: #171b18;
+    background: var(--ui-sage);
+}
+
+.studio-sidebar {
+    border-color: var(--ui-border);
+    background: rgba(25, 30, 27, .86);
+}
+
+.studio-sidebar .eyebrow,
+.preview-toolbar .eyebrow,
+.import-dialog .eyebrow {
+    color: var(--ui-terracotta);
+}
+
+.page-nav button {
+    color: var(--ui-text);
+}
+
+.page-nav button:hover,
+.page-nav button.active {
+    background: var(--ui-surface-raised);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+}
+
+.page-nav button.active,
+.page-arrow {
+    color: var(--ui-wine);
+}
+
+.page-number {
+    color: #87938b;
+}
+
+.sidebar-note {
+    border: 1px solid var(--ui-border);
+    background: #101412;
+}
+
+.sidebar-note span,
+.sidebar-note p {
+    color: var(--ui-muted);
+}
+
+.preview-toolbar {
+    border-color: var(--ui-border);
+    background: rgba(28, 34, 30, .94);
+}
+
+.preview-scroll {
+    background:
+        radial-gradient(circle at 50% 5%, rgba(255, 255, 255, .035), transparent 28rem),
+        #111513;
+}
+
+.catalog-sheet {
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .42);
+}
+
+.image-editor {
+    border-color: var(--ui-border-strong);
+    color: var(--ui-text);
+    background: rgba(31, 38, 34, .96);
+    box-shadow: 0 20px 55px rgba(0, 0, 0, .4);
+}
+
+.image-editor-kicker,
+.floating-editor-grip {
+    color: var(--ui-terracotta);
+}
+
+.image-editor strong,
+.font-size-field output,
+.dimension-field output,
+.layout-editor-heading output,
+.rotation-controls output {
+    color: var(--ui-wine);
+}
+
+.image-editor p,
+.floating-image-editor > small,
+.inspector-field,
+.layout-editor-heading,
+.layout-editor > small,
+.color-editor-heading,
+.zoom-control output,
+.rotation-controls span {
+    color: var(--ui-muted);
+}
+
+.zoom-control {
+    color: var(--ui-text);
+}
+
+.history-controls button,
+.text-reset-button,
+.inspector-field select,
+.text-position-controls button,
+.alignment-controls button,
+.position-controls button,
+.rotation-controls button {
+    border-color: var(--ui-border-strong);
+    color: var(--ui-sage);
+    background: var(--ui-surface-raised);
+}
+
+.history-controls button:hover:not(:disabled),
+.text-reset-button:hover,
+.position-controls button:hover,
+.rotation-controls button:hover {
+    border-color: var(--ui-sage);
+    background: var(--ui-surface-hover);
+}
+
+.text-reset-actions .theme-reset,
+.transparent-swatch {
+    color: var(--ui-wine);
+}
+
+.layout-editor,
+.color-editor,
+.rotation-controls span,
+.close-image-editor {
+    border-color: var(--ui-border);
+    background: var(--ui-bg-soft);
+}
+
+.alignment-controls button {
+    color: var(--ui-muted);
+}
+
+.alignment-controls button.active,
+.text-position-controls button:hover:not(:disabled) {
+    color: #151916;
+    background: var(--ui-sage);
+}
+
+.color-editor-heading input {
+    border-color: var(--ui-border-strong);
+    background: var(--ui-surface-raised);
+}
+
+.quality-warning {
+    border-color: rgba(169, 188, 168, .42);
+    color: #dce7df;
+    background: rgba(169, 188, 168, .1);
+}
+
+.layout-warning {
+    color: #f1c5b5;
+    background: rgba(224, 154, 126, .12);
+}
+
+.import-overlay {
+    background: rgba(5, 8, 6, .78);
+}
+
+.import-dialog {
+    border-color: var(--ui-border-strong);
+    color: var(--ui-text);
+    background: var(--ui-bg-soft);
+    box-shadow: 0 32px 100px rgba(0, 0, 0, .62);
+}
+
+.import-dialog-header {
+    border-color: var(--ui-border);
+    background: rgba(25, 30, 27, .97);
+}
+
+.import-dialog-header h2 {
+    color: var(--ui-wine);
+}
+
+.import-dialog-header p,
+.import-dropzone small,
+.import-summary span,
+.image-import-heading p,
+.image-import-picker small,
+.image-match-summary span,
+.import-table td:first-child,
+.import-table td small,
+.import-dialog-footer {
+    color: var(--ui-muted);
+}
+
+.import-close {
+    border-color: var(--ui-border-strong);
+    color: var(--ui-wine);
+    background: var(--ui-surface-raised);
+}
+
+.import-dropzone,
+.image-import-picker,
+.import-summary > div,
+.image-match-summary > div,
+.import-table-wrap {
+    border-color: var(--ui-border);
+    color: var(--ui-text);
+    background: var(--ui-surface);
+}
+
+.import-summary strong,
+.image-import-heading h3,
+.import-table td:nth-child(2) {
+    color: var(--ui-text);
+}
+
+.image-import-section {
+    border-color: var(--ui-border);
+    background: rgba(169, 188, 168, .055);
+}
+
+.image-review-badge,
+.import-mapping > div span {
+    color: #c1d3c0;
+    background: rgba(169, 188, 168, .13);
+}
+
+.import-notices,
+.image-file-notices {
+    color: #edc0ae;
+    background: rgba(224, 154, 126, .1);
+}
+
+.import-mapping > div span.unknown {
+    color: #edc0ae;
+    background: rgba(224, 154, 126, .12);
+}
+
+.import-table th,
+.import-table th:last-child {
+    color: #c3cec7;
+    background: #2b332f;
+}
+
+.import-table td,
+.import-table td:last-child {
+    border-color: var(--ui-border);
+    background: var(--ui-surface);
+}
+
+.import-table tbody tr:nth-child(even) td,
+.import-table tbody tr:nth-child(even) td:last-child {
+    background: #232a26;
+}
+
+.import-table th:last-child,
+.import-table td:last-child {
+    box-shadow: -10px 0 18px rgba(0, 0, 0, .22);
+}
+
+.import-row-actions button,
+.row-file-action {
+    border-color: var(--ui-border-strong);
+    color: var(--ui-sage);
+    background: var(--ui-surface-raised);
+}
+
+.import-row-actions .exclude-row-action {
+    border-color: rgba(213, 151, 173, .35);
+    color: var(--ui-wine);
+}
+
+.import-image-placeholder {
+    border-color: var(--ui-border-strong);
+    color: var(--ui-muted);
+    background: #181d1a;
+}
+
+.import-image-preview {
+    border-color: var(--ui-border);
+    background: #181d1a;
+}
+
+.row-status-valid {
+    color: #bfe7ce;
+    background: rgba(53, 107, 81, .32);
+}
+
+.row-status-warning {
+    color: #f1c9a9;
+    background: rgba(201, 121, 91, .24);
+}
+
+.row-status-error {
+    color: #f2b4b4;
+    background: rgba(161, 59, 59, .28);
+}
+
+.row-status-pending,
+.row-status-excluded {
+    color: #c4cec8;
+    background: rgba(169, 182, 174, .13);
+}
+
+.image-match-summary .summary-success {
+    border-color: rgba(122, 183, 146, .3);
+    color: #bfe7ce;
+    background: rgba(53, 107, 81, .2);
+}
+
+.import-summary .summary-warning,
+.image-match-summary .summary-warning {
+    background: rgba(201, 121, 91, .14);
+}
+
+.import-summary .summary-error,
+.image-match-summary .summary-error {
+    color: #f2b4b4;
+    background: rgba(161, 59, 59, .18);
+}
+
+.import-message-error,
+.image-import-error {
+    color: #f2b4b4;
+    background: rgba(161, 59, 59, .2);
+}
+
 @media (max-width: 1080px) {
     .studio-header {
         grid-template-columns: 1fr auto;

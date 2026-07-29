@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="darkreader-lock">
     <meta name="description" content="Muestra visual del generador automático de catálogos Crystal Rock">
     <title>Crystal Rock · Estudio de catálogo</title>
     <link rel="stylesheet" href="<?= base_url('assets/css/catalog-demo.css?v=' . filemtime(FCPATH . 'assets/css/catalog-demo.css')) ?>">

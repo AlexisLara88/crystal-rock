@@ -18,6 +18,7 @@ La fase visual D1 incluye una muestra navegable con datos fijos:
 - arrastre y ajuste fino de posición, ancho y alto con límites de zona y bloqueo de colisiones.
 - matriz declarativa de compatibilidad entre los 21 roles visuales y las nueve variantes.
 - paleta flotante amplia, legible y reposicionable, independiente del elemento seleccionado.
+- interfaz de estudio oscura y consistente entre navegadores, separada de la apariencia real de las hojas A4.
 - selección de texto neutra: un clic no altera dimensiones ni posición.
 - historial de sesión con deshacer/rehacer, restablecimientos amplios y advertencias visuales.
 - contrato de presentación versionado y prueba técnica mPDF A4.
