@@ -10,6 +10,10 @@
                 activeImageKey: null,
                 imageAdjustments: {},
                 dragState: null,
+                floatingEditorPosition: {
+                    top: 170,
+                    left: 350,
+                },
                 pages: [
                     { id: 'cover', type: 'cover', label: 'Portada', description: 'Tres tratamientos disponibles' },
                     { id: 'featured', type: 'featured', label: 'Producto destacado', description: 'Apertura de categoría' },
@@ -71,6 +75,18 @@
 
                 return this.imageAdjustments[this.activeImageKey] ?? null;
             },
+            floatingEditorStyle() {
+                return {
+                    top: `${this.floatingEditorPosition.top}px`,
+                    left: `${this.floatingEditorPosition.left}px`,
+                };
+            },
+        },
+        mounted() {
+            document.addEventListener('pointerdown', this.handleDocumentPointerDown);
+        },
+        beforeUnmount() {
+            document.removeEventListener('pointerdown', this.handleDocumentPointerDown);
         },
         methods: {
             asset(file) {
@@ -93,6 +109,7 @@
                         zoom: 1,
                         x: 0,
                         y: 0,
+                        maskSize: 0.9,
                     };
                 }
 
@@ -105,6 +122,15 @@
                     transform: `translate3d(${adjustment.x}%, ${adjustment.y}%, 0) scale(${adjustment.zoom})`,
                 };
             },
+            maskStyle(key) {
+                const adjustment = this.imageAdjustments[key] ?? { maskSize: 0.9 };
+                const size = `${adjustment.maskSize * 100}%`;
+
+                return {
+                    width: size,
+                    height: size,
+                };
+            },
             startImageDrag(key, label, event) {
                 event.preventDefault();
 
@@ -112,6 +138,7 @@
                 const bounds = event.currentTarget.getBoundingClientRect();
 
                 this.activeImageKey = key;
+                this.positionFloatingEditor(event.currentTarget);
                 this.dragState = {
                     key,
                     pointerId: event.pointerId,
@@ -146,6 +173,11 @@
 
                 this.activeImageAdjustment.zoom = this.clamp(Number(event.target.value), 0.7, 2.4);
             },
+            setMaskSize(event) {
+                if (!this.activeImageAdjustment) return;
+
+                this.activeImageAdjustment.maskSize = this.clamp(Number(event.target.value), 0.6, 1);
+            },
             nudgeImage(deltaX, deltaY) {
                 if (!this.activeImageAdjustment) return;
 
@@ -158,6 +190,34 @@
                 this.activeImageAdjustment.zoom = 1;
                 this.activeImageAdjustment.x = 0;
                 this.activeImageAdjustment.y = 0;
+                this.activeImageAdjustment.maskSize = 0.9;
+            },
+            positionFloatingEditor(element) {
+                const bounds = element.getBoundingClientRect();
+                const panelWidth = 270;
+                const panelHeight = 310;
+                const gap = 14;
+                const viewportPadding = 12;
+                let left = bounds.right + gap;
+
+                if (left + panelWidth > window.innerWidth - viewportPadding) {
+                    left = bounds.left - panelWidth - gap;
+                }
+
+                this.floatingEditorPosition = {
+                    top: this.clamp(bounds.top, viewportPadding, window.innerHeight - panelHeight - viewportPadding),
+                    left: this.clamp(left, viewportPadding, window.innerWidth - panelWidth - viewportPadding),
+                };
+            },
+            handleDocumentPointerDown(event) {
+                if (!this.activeImageKey) return;
+                if (event.target instanceof Element && event.target.closest('.image-mask, .floating-image-editor')) return;
+
+                this.deselectImage();
+            },
+            deselectImage() {
+                this.activeImageKey = null;
+                this.dragState = null;
             },
             clamp(value, minimum, maximum) {
                 return Math.min(Math.max(value, minimum), maximum);

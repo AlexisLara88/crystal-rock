@@ -46,6 +46,17 @@
                 <p>La estructura decide cómo acomodar el contenido; el usuario solo elige y corrige datos.</p>
             </div>
 
+            <div class="workflow-context">
+                <span>Flujo del producto</span>
+                <ol>
+                    <li>Excel + imágenes</li>
+                    <li>Validar y ordenar</li>
+                    <li class="active">Editar plantillas</li>
+                    <li>Generar PDF</li>
+                </ol>
+                <p>Esta demo corresponde al paso 3. La conexión de datos se incorpora en D2.</p>
+            </div>
+
             <nav class="page-nav" aria-label="Plantillas del catálogo">
                 <button
                     v-for="(page, index) in pages"
@@ -62,44 +73,6 @@
                     <span class="page-arrow">↗</span>
                 </button>
             </nav>
-
-            <section class="image-editor" aria-live="polite">
-                <template v-if="activeImageAdjustment">
-                    <span class="image-editor-kicker">Ajuste de imagen</span>
-                    <strong>{{ activeImageAdjustment.label }}</strong>
-                    <p>Arrastrá la imagen directamente dentro de la máscara o usá los controles.</p>
-
-                    <label class="zoom-control">
-                        <span>Zoom</span>
-                        <input
-                            type="range"
-                            min="0.7"
-                            max="2.4"
-                            step="0.05"
-                            :value="activeImageAdjustment.zoom"
-                            @input="setImageZoom"
-                        >
-                        <output>{{ Math.round(activeImageAdjustment.zoom * 100) }}%</output>
-                    </label>
-
-                    <div class="position-controls" aria-label="Posición de la imagen">
-                        <button type="button" @click="nudgeImage(0, -8)" aria-label="Mover arriba">↑</button>
-                        <button type="button" @click="nudgeImage(-8, 0)" aria-label="Mover a la izquierda">←</button>
-                        <button type="button" @click="resetImageAdjustment" aria-label="Centrar imagen">●</button>
-                        <button type="button" @click="nudgeImage(8, 0)" aria-label="Mover a la derecha">→</button>
-                        <button type="button" @click="nudgeImage(0, 8)" aria-label="Mover abajo">↓</button>
-                    </div>
-
-                    <button type="button" class="reset-image" @click="resetImageAdjustment">
-                        Centrar y restablecer
-                    </button>
-                </template>
-                <template v-else>
-                    <span class="image-editor-kicker">Ajuste de imagen</span>
-                    <strong>Seleccioná una imagen</strong>
-                    <p>Hacé clic sobre una imagen de producto para moverla o cambiar su zoom.</p>
-                </template>
-            </section>
 
             <div class="sidebar-note">
                 <span>Regla activa</span>
@@ -156,19 +129,22 @@
                                 </div>
                                 <div class="featured-product">
                                     <div class="featured-name">Copas Gin<br>Tonic 590 ML</div>
-                                    <div
-                                        :class="['featured-cutout', 'image-mask', { active: activeImageKey === 'featured-' + featuredProduct.code }]"
-                                        @pointerdown="startImageDrag('featured-' + featuredProduct.code, 'Copas Gin Tonic 590 ML', $event)"
-                                        @pointermove="dragImage"
-                                        @pointerup="endImageDrag"
-                                        @pointercancel="endImageDrag"
-                                    >
-                                        <img
-                                            :src="asset('glass-gin.png')"
-                                            alt="Copa Gin Tonic"
-                                            :style="imageStyle('featured-' + featuredProduct.code)"
-                                            draggable="false"
+                                    <div class="featured-cutout-slot">
+                                        <div
+                                            :class="['featured-cutout', 'image-mask', { active: activeImageKey === 'featured-' + featuredProduct.code }]"
+                                            :style="maskStyle('featured-' + featuredProduct.code)"
+                                            @pointerdown="startImageDrag('featured-' + featuredProduct.code, 'Copas Gin Tonic 590 ML', $event)"
+                                            @pointermove="dragImage"
+                                            @pointerup="endImageDrag"
+                                            @pointercancel="endImageDrag"
                                         >
+                                            <img
+                                                :src="asset('glass-gin.png')"
+                                                alt="Copa Gin Tonic"
+                                                :style="imageStyle('featured-' + featuredProduct.code)"
+                                                draggable="false"
+                                            >
+                                        </div>
                                     </div>
                                     <dl class="product-specs featured-specs">
                                         <template v-for="spec in featuredProduct.specs" :key="spec[0]">
@@ -211,19 +187,22 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div
-                                        :class="['product-image', 'image-mask', { active: activeImageKey === product.code }]"
-                                        @pointerdown="startImageDrag(product.code, product.name, $event)"
-                                        @pointermove="dragImage"
-                                        @pointerup="endImageDrag"
-                                        @pointercancel="endImageDrag"
-                                    >
-                                        <img
-                                            :src="asset(product.image)"
-                                            :alt="product.name"
-                                            :style="imageStyle(product.code)"
-                                            draggable="false"
+                                    <div class="product-image-slot">
+                                        <div
+                                            :class="['product-image', 'image-mask', { active: activeImageKey === product.code }]"
+                                            :style="maskStyle(product.code)"
+                                            @pointerdown="startImageDrag(product.code, product.name, $event)"
+                                            @pointermove="dragImage"
+                                            @pointerup="endImageDrag"
+                                            @pointercancel="endImageDrag"
                                         >
+                                            <img
+                                                :src="asset(product.image)"
+                                                :alt="product.name"
+                                                :style="imageStyle(product.code)"
+                                                draggable="false"
+                                            >
+                                        </div>
                                     </div>
                                 </section>
                             </div>
@@ -260,6 +239,59 @@
             </div>
         </section>
     </main>
+
+    <aside
+        v-if="activeImageAdjustment"
+        class="image-editor floating-image-editor"
+        :style="floatingEditorStyle"
+        aria-live="polite"
+        @pointerdown.stop
+        @click.stop
+    >
+        <button type="button" class="close-image-editor" @click="deselectImage" aria-label="Cerrar ajuste de imagen">×</button>
+        <span class="image-editor-kicker">Ajuste de imagen</span>
+        <strong>{{ activeImageAdjustment.label }}</strong>
+        <p>Arrastrá la imagen dentro de la máscara o usá los controles.</p>
+
+        <label class="zoom-control">
+            <span>Zoom</span>
+            <input
+                type="range"
+                min="0.7"
+                max="2.4"
+                step="0.05"
+                :value="activeImageAdjustment.zoom"
+                @input="setImageZoom"
+            >
+            <output>{{ Math.round(activeImageAdjustment.zoom * 100) }}%</output>
+        </label>
+
+        <label class="zoom-control mask-size-control">
+            <span>Marco</span>
+            <input
+                type="range"
+                min="0.6"
+                max="1"
+                step="0.05"
+                :value="activeImageAdjustment.maskSize"
+                @input="setMaskSize"
+            >
+            <output>{{ Math.round(activeImageAdjustment.maskSize * 100) }}%</output>
+        </label>
+
+        <div class="position-controls" aria-label="Posición de la imagen">
+            <button type="button" @click="nudgeImage(0, -8)" aria-label="Mover arriba">↑</button>
+            <button type="button" @click="nudgeImage(-8, 0)" aria-label="Mover a la izquierda">←</button>
+            <button type="button" @click="resetImageAdjustment" aria-label="Centrar imagen">●</button>
+            <button type="button" @click="nudgeImage(8, 0)" aria-label="Mover a la derecha">→</button>
+            <button type="button" @click="nudgeImage(0, 8)" aria-label="Mover abajo">↓</button>
+        </div>
+
+        <button type="button" class="reset-image" @click="resetImageAdjustment">
+            Centrar y restablecer
+        </button>
+        <small>Los controles y la selección no aparecen en el PDF.</small>
+    </aside>
 </div>
 
 <script>
