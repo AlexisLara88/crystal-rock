@@ -4,6 +4,8 @@ Demo web para automatizar catálogos comerciales PDF a partir de datos estructur
 
 ## Estado
 
+La aplicación inicia sin productos ni páginas generadas. El estado de bienvenida permite comenzar una importación o abrir, de forma opcional, el catálogo ficticio de ejemplo. Navegación, edición y descarga se habilitan únicamente cuando existe un catálogo visible.
+
 La fase visual D1 incluye una muestra navegable con datos fijos:
 
 - portada con tres tratamientos;

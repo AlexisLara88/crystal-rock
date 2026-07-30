@@ -52,7 +52,7 @@
                 bulkCategory: '',
                 approvedCatalogModel: null,
                 composedCatalogModel: null,
-                catalogMode: 'sample',
+                catalogMode: 'empty',
                 compositionNotice: '',
                 floatingEditorPosition: {
                     top: 96,
@@ -113,9 +113,12 @@
         },
         computed: {
             visiblePages() {
+                if (this.catalogMode === 'empty') return [];
+
                 return this.showAll ? this.pages : [this.pages[this.currentPage]];
             },
             catalogSourceSummary() {
+                if (this.catalogMode === 'empty') return 'Esperando productos';
                 if (this.catalogMode !== 'imported' || !this.composedCatalogModel) {
                     return 'Muestra visual';
                 }
@@ -301,6 +304,14 @@
                 this.deselectAll();
                 this.importPanelOpen = true;
                 this.importError = '';
+            },
+            showExampleCatalog() {
+                this.deselectAll();
+                this.catalogMode = 'sample';
+                this.currentPage = 0;
+                this.showAll = false;
+                this.compositionNotice = 'Estás viendo un catálogo de ejemplo. Podés editarlo o cargar tus propios productos.';
+                this.pdfExportError = '';
             },
             closeImportPanel() {
                 if (this.importingCatalog || this.imageMatching || this.imageReplacementRow !== null) return;
@@ -791,7 +802,7 @@
                 }));
             },
             async exportCurrentPdf() {
-                if (this.pdfExporting) return;
+                if (this.catalogMode === 'empty' || this.pdfExporting) return;
 
                 this.pdfExporting = true;
                 this.pdfExportProgress = 0;

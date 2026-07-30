@@ -22,14 +22,14 @@
 
         <div class="studio-status">
             <span class="status-dot"></span>
-            Demo funcional · D2
+            Demo funcional · D3
         </div>
 
         <div class="header-actions">
             <button type="button" class="ghost-button import-button" @click="openImportPanel">
-                Cargar Excel/CSV
+                {{ catalogMode === 'empty' ? 'Cargar productos' : 'Cargar Excel/CSV' }}
             </button>
-            <label class="theme-select">
+            <label v-if="catalogMode !== 'empty'" class="theme-select">
                 <span>Estilo de portada</span>
                 <select v-model="coverVariant">
                     <option value="editorial">Editorial</option>
@@ -37,13 +37,13 @@
                     <option value="minimal">Minimal claro</option>
                 </select>
             </label>
-            <button type="button" class="ghost-button" @click="toggleShowAll">
+            <button v-if="catalogMode !== 'empty'" type="button" class="ghost-button" @click="toggleShowAll">
                 {{ showAll ? 'Ver una página' : 'Ver catálogo completo' }}
             </button>
             <button
                 type="button"
                 class="ghost-button pdf-proof-button"
-                :disabled="pdfExporting"
+                :disabled="catalogMode === 'empty' || pdfExporting"
                 @click="exportCurrentPdf"
             >
                 {{ pdfExportButtonLabel }}
@@ -54,13 +54,24 @@
 
     <main class="studio-main">
         <aside class="studio-sidebar">
-            <div class="sidebar-intro">
+            <div v-if="catalogMode === 'empty'" class="sidebar-intro empty-sidebar-intro">
+                <span class="eyebrow">Nuevo catálogo</span>
+                <h1>Todo empieza con tus productos.</h1>
+                <p>La herramienta convierte los datos y las imágenes en páginas listas para revisar.</p>
+                <ol class="empty-sidebar-steps">
+                    <li><span>1</span>Cargá el Excel o CSV.</li>
+                    <li><span>2</span>Vinculá las imágenes.</li>
+                    <li><span>3</span>Revisá y generá el catálogo.</li>
+                </ol>
+            </div>
+
+            <div v-else class="sidebar-intro">
                 <span class="eyebrow">Sistema visual</span>
                 <h1>Una identidad, {{ pages.length }} composiciones.</h1>
                 <p>La estructura decide cómo acomodar el contenido; el usuario solo elige y corrige datos.</p>
             </div>
 
-            <nav class="page-nav" aria-label="Plantillas del catálogo">
+            <nav v-if="catalogMode !== 'empty'" class="page-nav" aria-label="Plantillas del catálogo">
                 <button
                     v-for="(page, index) in pages"
                     :key="page.id"
@@ -77,7 +88,7 @@
                 </button>
             </nav>
 
-            <div class="sidebar-note">
+            <div v-if="catalogMode !== 'empty'" class="sidebar-note">
                 <span>Regla activa</span>
                 <strong>El destacado no se repite.</strong>
                 <p>Los productos restantes se agrupan automáticamente en bloques de hasta cuatro.</p>
@@ -85,6 +96,29 @@
         </aside>
 
         <section class="preview-panel">
+            <div v-if="catalogMode === 'empty'" class="empty-catalog-state">
+                <div class="empty-catalog-visual" aria-hidden="true">
+                    <span class="empty-sheet empty-sheet-back"></span>
+                    <span class="empty-sheet empty-sheet-middle"></span>
+                    <span class="empty-sheet empty-sheet-front">
+                        <i></i><i></i><i></i>
+                    </span>
+                </div>
+                <span class="eyebrow">Catálogo nuevo</span>
+                <h2>Aún no hay un catálogo</h2>
+                <p>Cargá un archivo con productos y sus imágenes. La aplicación validará la información y construirá las páginas automáticamente.</p>
+                <div class="empty-catalog-actions">
+                    <button type="button" class="empty-primary-action" @click="openImportPanel">
+                        Crear catálogo
+                    </button>
+                    <button type="button" class="empty-secondary-action" @click="showExampleCatalog">
+                        Ver catálogo de ejemplo
+                    </button>
+                </div>
+                <small>No se guardará ningún archivo fuera de esta sesión.</small>
+            </div>
+
+            <template v-else>
             <div class="preview-toolbar">
                 <div>
                     <span class="eyebrow">Vista previa A4</span>
@@ -389,6 +423,7 @@
                     <p class="page-caption">{{ showAll ? index + 1 : currentPage + 1 }} · {{ page.label }}</p>
                 </article>
             </div>
+            </template>
         </section>
     </main>
 
